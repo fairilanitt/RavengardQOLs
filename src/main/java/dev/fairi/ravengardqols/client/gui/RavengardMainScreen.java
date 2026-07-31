@@ -51,6 +51,10 @@ public final class RavengardMainScreen extends Screen {
         int cardTop = top + 58;
 
         addRenderableWidget(new RavengardButton(railLeft + 6, selectedTop, 39, 39, Component.literal("QOL"), () -> { }));
+        RavengardButton inspectorButton = addRenderableWidget(
+            new RavengardButton(railLeft + 6, selectedTop + 47, 39, 39, Component.literal("INFO"), this::inspectHeldItem)
+        );
+        inspectorButton.active = minecraft.player != null && !minecraft.player.getMainHandItem().isEmpty();
 
         rarityToggleButton = addRenderableWidget(
             new RavengardButton(cardRight - 68, cardTop + 16, 56, 17, rarityToggleLabel(), this::toggleRarityHighlights)
@@ -144,6 +148,12 @@ public final class RavengardMainScreen extends Screen {
 
     private Component rarityToggleLabel() {
         return Component.literal(RaritySlotHighlighter.isEnabled() ? "ACTIVE" : "OFF");
+    }
+
+    private void inspectHeldItem() {
+        if (minecraft.player != null && !minecraft.player.getMainHandItem().isEmpty()) {
+            minecraft.gui.pushScreenLayer(new ItemInspectorScreen(minecraft.player.getMainHandItem()));
+        }
     }
 
     private void renderRivets(GuiGraphicsExtractor graphics, int left, int top) {

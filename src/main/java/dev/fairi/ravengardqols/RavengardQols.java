@@ -20,6 +20,7 @@ public final class RavengardQols {
             NeoForge.EVENT_BUS.addListener(RavengardQolsClient::onClientTick);
             NeoForge.EVENT_BUS.addListener(RavengardQolsClient::onScreenRender);
             NeoForge.EVENT_BUS.addListener(RavengardQolsClient::onRenderGuiLayer);
+            NeoForge.EVENT_BUS.addListener(RavengardQolsClient::onScreenKeyPressed);
         }
     }
 }

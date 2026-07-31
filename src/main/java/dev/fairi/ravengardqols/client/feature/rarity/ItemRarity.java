@@ -12,11 +12,13 @@ public enum ItemRarity {
     private final int borderColor;
     private final int fillColor;
     private final Pattern labelPattern;
+    private final Pattern metadataPattern;
 
     ItemRarity(String label, int borderColor, int fillColor) {
         this.borderColor = borderColor;
         this.fillColor = fillColor;
         this.labelPattern = Pattern.compile("^[^A-Z]*" + label + "(?:$|[^A-Z])");
+        this.metadataPattern = Pattern.compile("(?:RARITY|TIER)[\\\"']?\\s*[:=]\\s*[\\\"']?" + label + "(?:$|[^A-Z])");
     }
 
     public int borderColor() {
@@ -31,6 +33,16 @@ public enum ItemRarity {
         String normalized = text.toUpperCase(Locale.ROOT);
         for (ItemRarity rarity : values()) {
             if (rarity.labelPattern.matcher(normalized).find()) {
+                return Optional.of(rarity);
+            }
+        }
+        return Optional.empty();
+    }
+
+    public static Optional<ItemRarity> fromExplicitMetadata(String text) {
+        String normalized = text.toUpperCase(Locale.ROOT);
+        for (ItemRarity rarity : values()) {
+            if (rarity.metadataPattern.matcher(normalized).find()) {
                 return Optional.of(rarity);
             }
         }

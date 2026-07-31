@@ -1,4 +1,5 @@
 {
   "key.category.ravengardqols.main": "Ravengard QOL's",
-  "key.ravengardqols.open_main_screen": "Open main screen"
+  "key.ravengardqols.open_main_screen": "Open main screen",
+  "key.ravengardqols.inspect_item": "Inspect hovered or held item"
 }
