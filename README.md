@@ -9,3 +9,7 @@
 Run the client with `./gradlew runClient` (`gradlew.bat runClient` on Windows).
 
 Press `R` in-game to open the test main screen. The key can be changed in Minecraft's Controls menu.
+
+## Features
+
+- Highlights Common, Uncommon, and Rare items in open containers, the player inventory, and the hotbar.

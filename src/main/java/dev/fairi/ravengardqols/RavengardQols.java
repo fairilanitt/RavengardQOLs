@@ -18,6 +18,8 @@ public final class RavengardQols {
         if (FMLEnvironment.getDist() == Dist.CLIENT) {
             modEventBus.addListener(RavengardQolsClient::registerKeyMappings);
             NeoForge.EVENT_BUS.addListener(RavengardQolsClient::onClientTick);
+            NeoForge.EVENT_BUS.addListener(RavengardQolsClient::onScreenRender);
+            NeoForge.EVENT_BUS.addListener(RavengardQolsClient::onRenderGuiLayer);
         }
     }
 }
