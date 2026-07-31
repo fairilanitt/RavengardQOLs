@@ -16,7 +16,7 @@ public enum ItemRarity {
     ItemRarity(String label, int borderColor, int fillColor) {
         this.borderColor = borderColor;
         this.fillColor = fillColor;
-        this.labelPattern = Pattern.compile("^\\s*" + label + "(?:$|\\W)");
+        this.labelPattern = Pattern.compile("^[^A-Z]*" + label + "(?:$|[^A-Z])");
     }
 
     public int borderColor() {

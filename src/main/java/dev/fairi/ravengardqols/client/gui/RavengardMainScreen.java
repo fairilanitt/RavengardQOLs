@@ -1,5 +1,6 @@
 package dev.fairi.ravengardqols.client.gui;
 
+import dev.fairi.ravengardqols.client.feature.rarity.RaritySlotHighlighter;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -28,6 +29,7 @@ public final class RavengardMainScreen extends Screen {
     private static final int RARE = 0xFF3B82F6;
 
     private final Screen parent;
+    private RavengardButton rarityToggleButton;
 
     public RavengardMainScreen(Screen parent) {
         super(Component.literal("Ravengard QOL's"));
@@ -37,6 +39,22 @@ public final class RavengardMainScreen extends Screen {
     @Override
     public void onClose() {
         minecraft.gui.setScreen(parent);
+    }
+
+    @Override
+    protected void init() {
+        int left = (width - PANEL_WIDTH) / 2;
+        int top = (height - PANEL_HEIGHT) / 2;
+        int railLeft = left + 9;
+        int selectedTop = top + 56;
+        int cardRight = left + PANEL_WIDTH - 20;
+        int cardTop = top + 58;
+
+        addRenderableWidget(new RavengardButton(railLeft + 6, selectedTop, 39, 39, Component.literal("QOL"), () -> { }));
+
+        rarityToggleButton = addRenderableWidget(
+            new RavengardButton(cardRight - 68, cardTop + 16, 56, 17, rarityToggleLabel(), this::toggleRarityHighlights)
+        );
     }
 
     @Override
@@ -85,19 +103,6 @@ public final class RavengardMainScreen extends Screen {
         graphics.fill(railLeft + 3, railTop + 3, railLeft + 49, top + PANEL_HEIGHT - 12, FRAME_DARK);
         graphics.fill(railLeft + 4, railTop + 4, railLeft + 48, top + PANEL_HEIGHT - 13, FRAME_MID);
 
-        int selectedTop = railTop + 13;
-        graphics.fill(railLeft + 6, selectedTop + 3, railLeft + 45, selectedTop + 42, SHADOW_NEAR);
-        graphics.fill(railLeft + 6, selectedTop, railLeft + 45, selectedTop + 39, ACCENT_DARK);
-        graphics.fill(railLeft + 8, selectedTop + 2, railLeft + 43, selectedTop + 37, ACCENT);
-        graphics.fill(railLeft + 10, selectedTop + 4, railLeft + 41, selectedTop + 35, SURFACE_LIGHT);
-        graphics.fill(railLeft + 10, selectedTop + 4, railLeft + 41, selectedTop + 6, ACCENT_LIGHT);
-
-        int gearX = railLeft + 25;
-        int gearY = selectedTop + 20;
-        graphics.fill(gearX - 8, gearY - 2, gearX + 9, gearY + 3, TEXT);
-        graphics.fill(gearX - 2, gearY - 8, gearX + 3, gearY + 9, TEXT);
-        graphics.fill(gearX - 5, gearY - 5, gearX + 6, gearY + 6, TEXT);
-        graphics.fill(gearX - 2, gearY - 2, gearX + 3, gearY + 3, SURFACE_LIGHT);
     }
 
     private void renderFeatureCard(GuiGraphicsExtractor graphics, int left, int top) {
@@ -115,9 +120,6 @@ public final class RavengardMainScreen extends Screen {
         graphics.fill(cardLeft + 7, cardTop + 9, cardRight - 7, cardTop + 10, ACCENT_DARK);
 
         graphics.text(font, Component.literal("Rarity Highlights"), cardLeft + 14, cardTop + 20, TEXT, false);
-        graphics.fill(cardRight - 61, cardTop + 17, cardRight - 13, cardTop + 31, ACCENT_DARK);
-        graphics.fill(cardRight - 59, cardTop + 19, cardRight - 15, cardTop + 29, SURFACE_LIGHT);
-        graphics.text(font, Component.literal("ACTIVE"), cardRight - 54, cardTop + 20, ACCENT_LIGHT, false);
 
         int ruleY = cardTop + 40;
         graphics.fill(cardLeft + 14, ruleY, cardRight - 14, ruleY + 1, FRAME_LIGHT);
@@ -133,6 +135,15 @@ public final class RavengardMainScreen extends Screen {
         graphics.fill(x + 4, y + 4, x + 14, y + 14, SURFACE_DARK);
         graphics.fill(x + 5, y + 5, x + 13, y + 6, 0x70FFFFFF);
         graphics.text(font, label, x + 27, y + 5, TEXT_MUTED, false);
+    }
+
+    private void toggleRarityHighlights() {
+        RaritySlotHighlighter.toggleEnabled();
+        rarityToggleButton.setMessage(rarityToggleLabel());
+    }
+
+    private Component rarityToggleLabel() {
+        return Component.literal(RaritySlotHighlighter.isEnabled() ? "ACTIVE" : "OFF");
     }
 
     private void renderRivets(GuiGraphicsExtractor graphics, int left, int top) {

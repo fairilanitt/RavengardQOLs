@@ -14,12 +14,21 @@ public final class RaritySlotHighlighter {
     private static final int SLOT_SIZE = 16;
     private static final int SEPARATION_EDGE = 0xB0000000;
     private static final int INNER_GLEAM = 0x4CFFFFFF;
+    private static boolean enabled = true;
 
     private RaritySlotHighlighter() {
     }
 
+    public static boolean isEnabled() {
+        return enabled;
+    }
+
+    public static void toggleEnabled() {
+        enabled = !enabled;
+    }
+
     public static void highlightContainerSlots(ScreenEvent.Render.Foreground event) {
-        if (!(event.getScreen() instanceof AbstractContainerScreen<?> screen)) {
+        if (!enabled || !(event.getScreen() instanceof AbstractContainerScreen<?> screen)) {
             return;
         }
 
@@ -35,7 +44,7 @@ public final class RaritySlotHighlighter {
     }
 
     public static void highlightHotbarSlots(RenderGuiLayerEvent.Post event) {
-        if (!VanillaGuiLayers.HOTBAR.equals(event.getName())) {
+        if (!enabled || !VanillaGuiLayers.HOTBAR.equals(event.getName())) {
             return;
         }
 
