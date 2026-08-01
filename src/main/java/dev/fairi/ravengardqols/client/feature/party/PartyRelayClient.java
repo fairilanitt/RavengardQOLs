@@ -4,11 +4,16 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.authlib.exceptions.AuthenticationException;
+import dev.fairi.ravengardqols.client.feature.catalog.CatalogItemSubmission;
+import dev.fairi.ravengardqols.client.feature.catalog.CatalogPage;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -17,7 +22,7 @@ import java.util.concurrent.CompletionException;
 import net.minecraft.client.Minecraft;
 
 public final class PartyRelayClient {
-    private static final int MAXIMUM_RESPONSE_BYTES = 262_144;
+    private static final int MAXIMUM_RESPONSE_BYTES = 4_194_304;
     private static final Gson GSON = new Gson();
 
     private final HttpClient http = HttpClient.newBuilder()
@@ -106,6 +111,20 @@ public final class PartyRelayClient {
         ).thenApply(ignored -> null);
     }
 
+    public CompletableFuture<Boolean> discoverItem(CatalogItemSubmission item) {
+        return authenticatedSend("POST", "/v1/items/discover", item)
+            .thenApply(json -> GSON.fromJson(json, DiscoveryResult.class).created());
+    }
+
+    public CompletableFuture<CatalogPage> listItems(String query, int page, int pageSize) {
+        if (query == null || query.length() > 64 || page < 0 || pageSize < 1 || pageSize > 48) {
+            return CompletableFuture.failedFuture(new IllegalArgumentException("Invalid item catalog query"));
+        }
+        String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8).replace("+", "%20");
+        String path = "/v1/items?query=" + encodedQuery + "&page=" + page + "&pageSize=" + pageSize;
+        return authenticatedSend("GET", path, null).thenApply(json -> GSON.fromJson(json, CatalogPage.class));
+    }
+
     public synchronized void invalidateSession() {
         bearerToken = null;
     }
@@ -143,16 +162,20 @@ public final class PartyRelayClient {
             builder.method(method, HttpRequest.BodyPublishers.ofString(GSON.toJson(body)));
         }
 
-        return http.sendAsync(builder.build(), HttpResponse.BodyHandlers.ofByteArray()).thenApply(response -> {
-            byte[] bytes = response.body();
-            if (bytes.length > MAXIMUM_RESPONSE_BYTES) {
-                throw new CompletionException(new IOException("Party Finder relay response was too large"));
+        return http.sendAsync(builder.build(), HttpResponse.BodyHandlers.ofInputStream()).thenApply(response -> {
+            try (InputStream bodyStream = response.body()) {
+                byte[] bytes = bodyStream.readNBytes(MAXIMUM_RESPONSE_BYTES + 1);
+                if (bytes.length > MAXIMUM_RESPONSE_BYTES) {
+                    throw new CompletionException(new IOException("Ravengard backend response was too large"));
+                }
+                String responseBody = new String(bytes, StandardCharsets.UTF_8);
+                if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                    throw new CompletionException(new RelayException(response.statusCode(), errorMessage(responseBody)));
+                }
+                return responseBody;
+            } catch (IOException exception) {
+                throw new CompletionException(exception);
             }
-            String responseBody = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
-            if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new CompletionException(new RelayException(response.statusCode(), errorMessage(responseBody)));
-            }
-            return responseBody;
         });
     }
 
@@ -216,6 +239,9 @@ public final class PartyRelayClient {
     }
 
     private record RequestDecision(String decision) {
+    }
+
+    private record DiscoveryResult(boolean created) {
     }
 
     public static final class RelayException extends IOException {

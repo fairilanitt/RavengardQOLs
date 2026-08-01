@@ -28,6 +28,7 @@ public final class PartyFinderController {
     private volatile List<PartyJoinRequest> requests = List.of();
     private volatile PartyRoster roster = PartyRoster.empty();
     private volatile String status = "Ready";
+    private volatile boolean connected;
     private boolean relayStarted;
     private boolean advertised;
     private int advertisedMinimum;
@@ -86,6 +87,10 @@ public final class PartyFinderController {
         return advertised;
     }
 
+    public boolean isConnected() {
+        return connected;
+    }
+
     public void refreshRoster() {
         chatParser.beginCapture();
         sendCommand("party list");
@@ -93,12 +98,15 @@ public final class PartyFinderController {
     }
 
     public void refreshParties() {
-        startRelay();
+        if (!startRelay()) {
+            return;
+        }
         relay.listParties().whenComplete((result, failure) -> onMinecraftThread(() -> {
             if (failure != null) {
                 setFailure("Party list", failure);
                 return;
             }
+            markConnected();
             boolean changed = !parties.equals(result);
             parties = result;
             setStatus("Found " + result.size() + " parties");
@@ -134,8 +142,9 @@ public final class PartyFinderController {
             sendCommand("party transfer " + player);
             setStatus("Transferred party to " + player);
             advertised = false;
-            startRelay();
-            relay.removeParty();
+            if (startRelay()) {
+                relay.removeParty();
+            }
             scheduleRosterRefresh();
         }
     }
@@ -154,12 +163,15 @@ public final class PartyFinderController {
             ? List.of(Minecraft.getInstance().getUser().getName())
             : roster.members().subList(0, Math.min(PARTY_LIMIT, roster.members().size()));
 
-        startRelay();
+        if (!startRelay()) {
+            return;
+        }
         relay.publishParty(localLevel, minimumLevel, maximumLevel, members).whenComplete((ignored, failure) -> onMinecraftThread(() -> {
             if (failure != null) {
                 setFailure("Publish", failure);
                 return;
             }
+            markConnected();
             advertised = true;
             advertisedMinimum = minimumLevel;
             advertisedMaximum = maximumLevel;
@@ -173,12 +185,15 @@ public final class PartyFinderController {
     }
 
     public void removePublishedParty() {
-        startRelay();
+        if (!startRelay()) {
+            return;
+        }
         relay.removeParty().whenComplete((ignored, failure) -> onMinecraftThread(() -> {
             if (failure != null) {
                 setFailure("Remove", failure);
                 return;
             }
+            markConnected();
             advertised = false;
             setStatus("Party removed from finder");
             notifyScreen();
@@ -196,11 +211,14 @@ public final class PartyFinderController {
             setStatus("Your level is outside that party's range");
             return;
         }
-        startRelay();
+        if (!startRelay()) {
+            return;
+        }
         relay.requestJoin(listing.leaderUuid(), level).whenComplete((ignored, failure) -> onMinecraftThread(() -> {
             if (failure != null) {
                 setFailure("Join request", failure);
             } else {
+                markConnected();
                 setStatus("Join request sent to " + listing.leaderName());
             }
         }));
@@ -228,12 +246,15 @@ public final class PartyFinderController {
     }
 
     private void decideRequest(PartyJoinRequest request, boolean accepted) {
-        startRelay();
+        if (!startRelay()) {
+            return;
+        }
         relay.decideRequest(request.id(), accepted).whenComplete((ignored, failure) -> onMinecraftThread(() -> {
             if (failure != null) {
                 setFailure("Request decision", failure);
                 return;
             }
+            markConnected();
             List<PartyJoinRequest> updated = new ArrayList<>(requests);
             updated.removeIf(candidate -> candidate.id().equals(request.id()));
             requests = List.copyOf(updated);
@@ -245,8 +266,10 @@ public final class PartyFinderController {
     private void refreshRequests() {
         relay.getRequests().whenComplete((result, failure) -> onMinecraftThread(() -> {
             if (failure != null) {
+                markUnavailable();
                 return;
             }
+            markConnected();
             boolean changed = !requests.equals(result);
             requests = result;
             for (PartyJoinRequest request : result) {
@@ -277,23 +300,24 @@ public final class PartyFinderController {
 
     public void openScreen() {
         Minecraft minecraft = Minecraft.getInstance();
-        startRelay();
         minecraft.gui.setScreen(new PartyFinderScreen(minecraft.gui.screen(), this));
         refreshParties();
         refreshRoster();
     }
 
-    private void startRelay() {
+    private boolean startRelay() {
         if (relay != null) {
             relayStarted = true;
-            return;
+            return true;
         }
         try {
             relay = new PartyRelayClient(PartyFinderConfig.relayUri());
             relayStarted = true;
+            return true;
         } catch (RuntimeException exception) {
+            markUnavailable();
             setStatus("Invalid relay config: " + safeMessage(exception));
-            throw exception;
+            return false;
         }
     }
 
@@ -343,7 +367,24 @@ public final class PartyFinderController {
     private void setFailure(String operation, Throwable failure) {
         Throwable cause = unwrap(failure);
         RavengardQolsCommon.LOGGER.warn("Party Finder {} failed: {}", operation, cause.toString());
+        markUnavailable();
         setStatus(operation + " failed: " + safeMessage(cause));
+    }
+
+    private void markConnected() {
+        if (!connected) {
+            connected = true;
+            notifyScreen();
+        }
+    }
+
+    private void markUnavailable() {
+        if (connected) {
+            connected = false;
+            parties = List.of();
+            requests = List.of();
+            notifyScreen();
+        }
     }
 
     private void setStatus(String value) {

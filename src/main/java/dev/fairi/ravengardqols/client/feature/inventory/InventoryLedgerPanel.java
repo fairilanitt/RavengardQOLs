@@ -11,10 +11,12 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
@@ -80,7 +82,7 @@ public final class InventoryLedgerPanel {
         int imageWidth,
         int imageHeight
     ) {
-        if (!enabled || (deadBodiesOnly && !isLootBag(screen))) {
+        if (screen instanceof InventoryScreen || !enabled || (deadBodiesOnly && !isLootContainer(screen))) {
             panelBounds = null;
             maximumScroll = 0;
             return;
@@ -130,8 +132,11 @@ public final class InventoryLedgerPanel {
 
     private static List<ListedItem> collectItems(AbstractContainerScreen<?> screen) {
         List<ListedItem> items = new ArrayList<>();
+        Minecraft minecraft = Minecraft.getInstance();
         for (Slot slot : screen.getMenu().slots) {
-            if (!slot.isActive() || !slot.hasItem()) {
+            if (!slot.isActive()
+                || !slot.hasItem()
+                || (minecraft.player != null && slot.container == minecraft.player.getInventory())) {
                 continue;
             }
 
@@ -153,8 +158,11 @@ public final class InventoryLedgerPanel {
         return List.copyOf(items);
     }
 
-    private static boolean isLootBag(AbstractContainerScreen<?> screen) {
-        return "Dead Body".equalsIgnoreCase(screen.getTitle().getString().trim());
+    private static boolean isLootContainer(AbstractContainerScreen<?> screen) {
+        String title = screen.getTitle().getString().trim();
+        return title.isEmpty()
+            || "Dead Body".equalsIgnoreCase(title)
+            || screen.getMenu() instanceof ChestMenu;
     }
 
     private static PanelBounds calculateBounds(

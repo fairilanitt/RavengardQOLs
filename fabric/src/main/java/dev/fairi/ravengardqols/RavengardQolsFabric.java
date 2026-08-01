@@ -2,6 +2,8 @@ package dev.fairi.ravengardqols;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import dev.fairi.ravengardqols.client.feature.catalog.ItemCatalogController;
+import dev.fairi.ravengardqols.client.feature.catalog.ItemCatalogPanel;
 import dev.fairi.ravengardqols.client.feature.inventory.InventoryLedgerPanel;
 import dev.fairi.ravengardqols.client.feature.party.PartyFinderController;
 import dev.fairi.ravengardqols.client.feature.playerlist.NearbyPlayerList;
@@ -62,6 +64,7 @@ public final class RavengardQolsFabric implements ClientModInitializer {
 
     private void onClientTick(Minecraft minecraft) {
         PartyFinderController.get().tick();
+        ItemCatalogController.get().tick();
         while (OPEN_MAIN_SCREEN.consumeClick()) {
             minecraft.gui.setScreen(new RavengardMainScreen(minecraft.gui.screen()));
         }
@@ -91,9 +94,23 @@ public final class RavengardQolsFabric implements ClientModInitializer {
                         accessor.ravengardqols$getImageWidth(),
                         accessor.ravengardqols$getImageHeight()
                     );
+                    ItemCatalogPanel.render(
+                        containerScreen,
+                        graphics,
+                        accessor.ravengardqols$getLeftPos(),
+                        accessor.ravengardqols$getTopPos(),
+                        accessor.ravengardqols$getImageWidth(),
+                        accessor.ravengardqols$getImageHeight(),
+                        mouseX,
+                        mouseY,
+                        partialTick
+                    );
                 }
             });
             ScreenKeyboardEvents.allowKeyPress(screen).register((current, keyEvent) -> {
+                if (ItemCatalogPanel.onKeyPressed(current, keyEvent)) {
+                    return false;
+                }
                 if (!INSPECT_ITEM.matches(keyEvent) || !(current instanceof AbstractContainerScreen<?> containerScreen)) {
                     return true;
                 }
@@ -104,8 +121,15 @@ public final class RavengardQolsFabric implements ClientModInitializer {
                 openInspector(hoveredSlot.getItem());
                 return false;
             });
+            ScreenKeyboardEvents.allowCharType(screen).register((current, characterEvent) ->
+                !ItemCatalogPanel.onCharTyped(current, characterEvent)
+            );
+            ScreenMouseEvents.allowMouseClick(screen).register((current, mouseButtonEvent) ->
+                !ItemCatalogPanel.onMouseClicked(current, mouseButtonEvent, false)
+            );
             ScreenMouseEvents.allowMouseScroll(screen).register((current, mouseX, mouseY, horizontalAmount, verticalAmount) ->
-                !InventoryLedgerPanel.onMouseScrolled(current, mouseX, mouseY, verticalAmount)
+                !ItemCatalogPanel.onMouseScrolled(current, mouseX, mouseY, verticalAmount)
+                    && !InventoryLedgerPanel.onMouseScrolled(current, mouseX, mouseY, verticalAmount)
             );
         });
     }

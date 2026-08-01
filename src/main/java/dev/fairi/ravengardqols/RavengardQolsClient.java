@@ -2,6 +2,8 @@ package dev.fairi.ravengardqols;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import dev.fairi.ravengardqols.client.feature.catalog.ItemCatalogController;
+import dev.fairi.ravengardqols.client.feature.catalog.ItemCatalogPanel;
 import dev.fairi.ravengardqols.client.feature.rarity.RaritySlotHighlighter;
 import dev.fairi.ravengardqols.client.feature.inventory.InventoryLedgerPanel;
 import dev.fairi.ravengardqols.client.feature.playerlist.NearbyPlayerList;
@@ -52,6 +54,7 @@ final class RavengardQolsClient {
 
     static void onClientTick(ClientTickEvent.Post event) {
         PartyFinderController.get().tick();
+        ItemCatalogController.get().tick();
         while (OPEN_MAIN_SCREEN.consumeClick()) {
             Minecraft minecraft = Minecraft.getInstance();
             minecraft.gui.setScreen(new RavengardMainScreen(minecraft.gui.screen()));
@@ -81,6 +84,17 @@ final class RavengardQolsClient {
                 containerScreen.getImageWidth(),
                 containerScreen.getImageHeight()
             );
+            ItemCatalogPanel.render(
+                containerScreen,
+                event.getGuiGraphics(),
+                containerScreen.getLeftPos(),
+                containerScreen.getTopPos(),
+                containerScreen.getImageWidth(),
+                containerScreen.getImageHeight(),
+                event.getMouseX(),
+                event.getMouseY(),
+                event.getPartialTick()
+            );
         }
     }
 
@@ -91,6 +105,10 @@ final class RavengardQolsClient {
     }
 
     static void onScreenKeyPressed(ScreenEvent.KeyPressed.Pre event) {
+        if (ItemCatalogPanel.onKeyPressed(event.getScreen(), event.getKeyEvent())) {
+            event.setCanceled(true);
+            return;
+        }
         if (!INSPECT_ITEM.matches(event.getKeyEvent())
             || !(event.getScreen() instanceof AbstractContainerScreen<?> containerScreen)) {
             return;
@@ -103,8 +121,25 @@ final class RavengardQolsClient {
         }
     }
 
+    static void onScreenCharacterTyped(ScreenEvent.CharacterTyped.Pre event) {
+        if (ItemCatalogPanel.onCharTyped(event.getScreen(), event.getCharacterEvent())) {
+            event.setCanceled(true);
+        }
+    }
+
+    static void onScreenMousePressed(ScreenEvent.MouseButtonPressed.Pre event) {
+        if (ItemCatalogPanel.onMouseClicked(event.getScreen(), event.getMouseButtonEvent(), event.isDoubleClick())) {
+            event.setCanceled(true);
+        }
+    }
+
     static void onScreenMouseScrolled(ScreenEvent.MouseScrolled.Pre event) {
-        if (InventoryLedgerPanel.onMouseScrolled(
+        if (ItemCatalogPanel.onMouseScrolled(
+            event.getScreen(),
+            event.getMouseX(),
+            event.getMouseY(),
+            event.getScrollDeltaY()
+        ) || InventoryLedgerPanel.onMouseScrolled(
             event.getScreen(),
             event.getMouseX(),
             event.getMouseY(),

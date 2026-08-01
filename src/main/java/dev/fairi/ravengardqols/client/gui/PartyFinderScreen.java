@@ -52,6 +52,10 @@ public final class PartyFinderScreen extends Screen {
         int contentLeft = left + SIDEBAR_WIDTH + 13;
         int contentRight = left + PANEL_WIDTH - 12;
 
+        if (!controller.isConnected()) {
+            return;
+        }
+
         addRenderableWidget(new PartyFinderButton(left + 8, top + 53, SIDEBAR_WIDTH - 8, 25, Component.literal("Find Party"), () -> select(Tab.FIND)));
         addRenderableWidget(new PartyFinderButton(left + 8, top + 78, SIDEBAR_WIDTH - 8, 25, Component.literal("My Party"), () -> select(Tab.MANAGE)));
 
@@ -122,6 +126,25 @@ public final class PartyFinderScreen extends Screen {
         graphics.fill(left + 7, top + 43, right - 7, top + 45, BRASS);
         graphics.text(font, title, left + 22, top + 22, PARCHMENT, false);
         graphics.text(font, "Ravengard party board", right - 147, top + 22, TEAL_LIGHT, false);
+
+        if (!controller.isConnected()) {
+            graphics.fill(left + 7, top + 45, right - 7, bottom - 7, WOOD_DARK);
+            String message = "Temporarily unavailable";
+            graphics.text(
+                font,
+                message,
+                (left + right - font.width(message)) / 2,
+                (top + bottom - font.lineHeight) / 2,
+                MUTED,
+                false
+            );
+            rivet(graphics, left + 7, top + 7);
+            rivet(graphics, right - 8, top + 7);
+            rivet(graphics, left + 7, bottom - 8);
+            rivet(graphics, right - 8, bottom - 8);
+            super.extractRenderState(graphics, mouseX, mouseY, partialTick);
+            return;
+        }
 
         graphics.fill(left + 7, top + 45, left + SIDEBAR_WIDTH + 7, bottom - 7, WOOD_DARK);
         graphics.fill(left + SIDEBAR_WIDTH + 7, top + 45, left + SIDEBAR_WIDTH + 9, bottom - 7, BRASS_DARK);
