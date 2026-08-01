@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import dev.fairi.ravengardqols.client.feature.rarity.RaritySlotHighlighter;
 import dev.fairi.ravengardqols.client.feature.inventory.InventoryLedgerPanel;
 import dev.fairi.ravengardqols.client.feature.playerlist.NearbyPlayerList;
+import dev.fairi.ravengardqols.client.feature.party.PartyFinderController;
 import dev.fairi.ravengardqols.client.gui.ItemInspectorScreen;
 import dev.fairi.ravengardqols.client.gui.RavengardMainScreen;
 import net.minecraft.client.KeyMapping;
@@ -13,6 +14,8 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.ClientChatReceivedEvent;
+import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
@@ -45,6 +48,7 @@ final class RavengardQolsClient {
     }
 
     static void onClientTick(ClientTickEvent.Post event) {
+        PartyFinderController.get().tick();
         while (OPEN_MAIN_SCREEN.consumeClick()) {
             Minecraft minecraft = Minecraft.getInstance();
             minecraft.gui.setScreen(new RavengardMainScreen(minecraft.gui.screen()));
@@ -82,6 +86,14 @@ final class RavengardQolsClient {
 
     static void onScreenMouseScrolled(ScreenEvent.MouseScrolled.Pre event) {
         InventoryLedgerPanel.onMouseScrolled(event);
+    }
+
+    static void registerClientCommands(RegisterClientCommandsEvent event) {
+        PartyFinderController.get().registerCommands(event);
+    }
+
+    static void onClientChatReceived(ClientChatReceivedEvent event) {
+        PartyFinderController.get().onChat(event);
     }
 
     private static void openInspector(ItemStack stack) {

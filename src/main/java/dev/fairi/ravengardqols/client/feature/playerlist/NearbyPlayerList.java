@@ -3,8 +3,6 @@ package dev.fairi.ravengardqols.client.feature.playerlist;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -13,9 +11,6 @@ import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
 public final class NearbyPlayerList {
-    private static final Pattern TRAILING_LEVEL = Pattern.compile("^(.*?)\\s+([0-9]+)\\s*\\D*$");
-    private static final Pattern LEGACY_FORMATTING = Pattern.compile("§[0-9A-FK-ORa-fk-or]");
-
     private static final int PANEL_WIDTH = 136;
     private static final int HEADER_HEIGHT = 24;
     private static final int ROW_HEIGHT = 15;
@@ -96,12 +91,9 @@ public final class NearbyPlayerList {
     }
 
     private static PlayerEntry parsePlayer(String displayName, boolean local) {
-        String cleanName = LEGACY_FORMATTING.matcher(displayName).replaceAll("").trim();
-        Matcher matcher = TRAILING_LEVEL.matcher(cleanName);
-        if (matcher.matches()) {
-            return new PlayerEntry(matcher.group(1).trim(), matcher.group(2), local);
-        }
-        return new PlayerEntry(cleanName, "?", local);
+        PlayerLevelParser.ParsedPlayer parsed = PlayerLevelParser.parse(displayName);
+        String level = parsed.level().isPresent() ? String.valueOf(parsed.level().getAsInt()) : "?";
+        return new PlayerEntry(parsed.name(), level, local);
     }
 
     private static void renderFrame(
