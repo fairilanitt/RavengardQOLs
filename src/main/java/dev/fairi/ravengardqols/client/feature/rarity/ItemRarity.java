@@ -29,6 +29,10 @@ public enum ItemRarity {
         return fillColor;
     }
 
+    public int sortPriority() {
+        return ordinal();
+    }
+
     public static Optional<ItemRarity> fromText(String text) {
         String normalized = text.toUpperCase(Locale.ROOT);
         for (ItemRarity rarity : values()) {
@@ -43,6 +47,16 @@ public enum ItemRarity {
         String normalized = text.toUpperCase(Locale.ROOT);
         for (ItemRarity rarity : values()) {
             if (rarity.metadataPattern.matcher(normalized).find()) {
+                return Optional.of(rarity);
+            }
+        }
+        return Optional.empty();
+    }
+
+    public static Optional<ItemRarity> fromTooltipStylePath(String path) {
+        String normalized = path.toUpperCase(Locale.ROOT);
+        for (ItemRarity rarity : values()) {
+            if (normalized.equals(rarity.name()) || normalized.endsWith("/" + rarity.name())) {
                 return Optional.of(rarity);
             }
         }

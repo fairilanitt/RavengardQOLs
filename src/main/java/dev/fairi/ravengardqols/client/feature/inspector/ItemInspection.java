@@ -5,9 +5,11 @@ import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.JsonOps;
 import dev.fairi.ravengardqols.client.feature.rarity.RarityDetection;
 import dev.fairi.ravengardqols.client.feature.rarity.RarityScanner;
+import dev.fairi.ravengardqols.client.feature.inventory.SellPriceScanner;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.OptionalLong;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.TypedDataComponent;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -20,6 +22,7 @@ public record ItemInspection(
     int count,
     String detectedRarity,
     String detectionSource,
+    String sellPrice,
     List<ComponentEntry> components,
     String clipboardText
 ) {
@@ -42,11 +45,13 @@ public record ItemInspection(
         RarityDetection detection = RarityScanner.detectDetailed(stack).orElse(null);
         String rarity = detection == null ? "NONE" : detection.rarity().name();
         String source = detection == null ? "NONE" : detection.source();
+        OptionalLong detectedSellPrice = SellPriceScanner.detect(stack);
+        String sellPrice = detectedSellPrice.isPresent() ? detectedSellPrice.getAsLong() + " CROWNS" : "NONE";
         String itemName = escapeNonAscii(stack.getHoverName().getString());
         String itemId = String.valueOf(BuiltInRegistries.ITEM.getKey(stack.getItem()));
-        String clipboard = buildClipboardText(itemName, itemId, stack.getCount(), rarity, source, components);
+        String clipboard = buildClipboardText(itemName, itemId, stack.getCount(), rarity, source, sellPrice, components);
 
-        return new ItemInspection(itemName, itemId, stack.getCount(), rarity, source, List.copyOf(components), clipboard);
+        return new ItemInspection(itemName, itemId, stack.getCount(), rarity, source, sellPrice, List.copyOf(components), clipboard);
     }
 
     private static String buildClipboardText(
@@ -55,6 +60,7 @@ public record ItemInspection(
         int count,
         String rarity,
         String source,
+        String sellPrice,
         List<ComponentEntry> components
     ) {
         StringBuilder output = new StringBuilder();
@@ -63,6 +69,7 @@ public record ItemInspection(
         output.append("Count: ").append(count).append('\n');
         output.append("Detected rarity: ").append(rarity).append('\n');
         output.append("Detection source: ").append(source).append('\n');
+        output.append("Sell price: ").append(sellPrice).append('\n');
         output.append("Components: ").append(components.size()).append('\n');
         for (ComponentEntry component : components) {
             output.append('\n').append(component.id()).append(" = ").append(component.value());

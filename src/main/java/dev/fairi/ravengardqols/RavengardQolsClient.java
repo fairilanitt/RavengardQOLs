@@ -2,6 +2,7 @@ package dev.fairi.ravengardqols;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.fairi.ravengardqols.client.feature.rarity.RaritySlotHighlighter;
+import dev.fairi.ravengardqols.client.feature.inventory.InventoryLedgerPanel;
 import dev.fairi.ravengardqols.client.gui.ItemInspectorScreen;
 import dev.fairi.ravengardqols.client.gui.RavengardMainScreen;
 import net.minecraft.client.KeyMapping;
@@ -58,6 +59,7 @@ final class RavengardQolsClient {
 
     static void onScreenRender(ScreenEvent.Render.Foreground event) {
         RaritySlotHighlighter.highlightContainerSlots(event);
+        InventoryLedgerPanel.render(event);
     }
 
     static void onRenderGuiLayer(RenderGuiLayerEvent.Post event) {
@@ -75,6 +77,10 @@ final class RavengardQolsClient {
             openInspector(hoveredSlot.getItem());
             event.setCanceled(true);
         }
+    }
+
+    static void onScreenMouseScrolled(ScreenEvent.MouseScrolled.Pre event) {
+        InventoryLedgerPanel.onMouseScrolled(event);
     }
 
     private static void openInspector(ItemStack stack) {

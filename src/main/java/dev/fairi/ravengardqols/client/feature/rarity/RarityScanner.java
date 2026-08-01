@@ -5,6 +5,7 @@ import net.minecraft.core.component.TypedDataComponent;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemLore;
 
@@ -19,6 +20,14 @@ public final class RarityScanner {
     public static Optional<RarityDetection> detectDetailed(ItemStack stack) {
         if (stack.isEmpty()) {
             return Optional.empty();
+        }
+
+        Identifier tooltipStyle = stack.get(DataComponents.TOOLTIP_STYLE);
+        if (tooltipStyle != null) {
+            Optional<ItemRarity> tooltipRarity = ItemRarity.fromTooltipStylePath(tooltipStyle.getPath());
+            if (tooltipRarity.isPresent()) {
+                return Optional.of(new RarityDetection(tooltipRarity.get(), "minecraft:tooltip_style"));
+            }
         }
 
         ItemLore lore = stack.get(DataComponents.LORE);

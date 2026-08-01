@@ -122,6 +122,10 @@ public final class ItemInspectorScreen extends Screen {
             Component.literal("DETECTION SOURCE: ").withColor(ACCENT_LIGHT)
                 .append(Component.literal(inspection.detectionSource()).withColor(TEXT_MUTED))
         );
+        lines.add(
+            Component.literal("SELL PRICE: ").withColor(ACCENT_LIGHT)
+                .append(Component.literal(inspection.sellPrice()).withColor(TEXT_MUTED))
+        );
         lines.add(Component.literal(" "));
 
         for (ItemInspection.ComponentEntry component : inspection.components()) {
