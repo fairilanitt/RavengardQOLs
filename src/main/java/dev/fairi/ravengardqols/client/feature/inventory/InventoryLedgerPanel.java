@@ -38,9 +38,6 @@ public final class InventoryLedgerPanel {
     private static final int PARCHMENT = 0xFFE7D3A2;
     private static final int PARCHMENT_MUTED = 0xFFBFAE84;
 
-    private static final Identifier COMMON_ICON = texture("common.png");
-    private static final Identifier UNCOMMON_ICON = texture("uncommon.png");
-    private static final Identifier RARE_ICON = texture("rare.png");
     private static final Identifier CROWN_ICON = texture("crown.png");
 
     private static AbstractContainerScreen<?> activeScreen;
@@ -88,7 +85,7 @@ public final class InventoryLedgerPanel {
         maximumScroll = Math.max(0, items.size() - visibleRows);
         scrollOffset = Mth.clamp(scrollOffset, 0, maximumScroll);
 
-        renderFrame(graphics, font, bounds, items.size());
+        renderFrame(graphics, font, bounds);
         graphics.enableScissor(bounds.left() + 5, contentTop, bounds.right() - 5, contentBottom);
         int lastItem = Math.min(items.size(), scrollOffset + visibleRows);
         for (int index = scrollOffset; index < lastItem; index++) {
@@ -156,7 +153,7 @@ public final class InventoryLedgerPanel {
         return new PanelBounds(left, top, right, bottom);
     }
 
-    private static void renderFrame(GuiGraphicsExtractor graphics, Font font, PanelBounds bounds, int itemCount) {
+    private static void renderFrame(GuiGraphicsExtractor graphics, Font font, PanelBounds bounds) {
         graphics.fill(bounds.left() + 7, bounds.top() + 8, bounds.right() + 7, bounds.bottom() + 8, SHADOW);
         graphics.fill(bounds.left(), bounds.top(), bounds.right(), bounds.bottom(), IRON_BLACK);
         graphics.fill(bounds.left() + 2, bounds.top() + 2, bounds.right() - 2, bounds.bottom() - 2, GOLD_DARK);
@@ -169,11 +166,8 @@ public final class InventoryLedgerPanel {
         graphics.fill(bounds.left() + 7, bounds.top() + HEADER_HEIGHT - 4, bounds.right() - 7, bounds.top() + HEADER_HEIGHT - 2, GOLD);
         graphics.fill(bounds.left() + 8, bounds.top() + HEADER_HEIGHT - 4, bounds.right() - 35, bounds.top() + HEADER_HEIGHT - 3, GOLD_LIGHT);
 
-        renderTexture(graphics, CROWN_ICON, (bounds.left() + bounds.right()) / 2 - 5, bounds.top() + 7, 10, 12);
         String title = "Loot Value";
-        graphics.text(font, title, (bounds.left() + bounds.right() - font.width(title)) / 2, bounds.top() + 20, PARCHMENT, false);
-        String count = String.valueOf(itemCount);
-        graphics.text(font, count, bounds.right() - 11 - font.width(count), bounds.top() + 20, GOLD_LIGHT, false);
+        graphics.text(font, title, (bounds.left() + bounds.right() - font.width(title)) / 2, bounds.top() + 16, PARCHMENT, false);
 
         rivet(graphics, bounds.left() + 5, bounds.top() + 5);
         rivet(graphics, bounds.right() - 6, bounds.top() + 5);
@@ -199,11 +193,9 @@ public final class InventoryLedgerPanel {
         String itemName = font.plainSubstrByWidth(item.stack().getHoverName().getString(), textWidth);
         graphics.text(font, itemName, textLeft, rowTop + 3, item.rarity().borderColor(), false);
 
-        int detailY = rowTop + 12;
-        renderTexture(graphics, rarityIcon(item.rarity()), textLeft, detailY, 9, 16);
         if (item.sellPrice().isPresent()) {
-            int crownX = textLeft + 12;
-            renderTexture(graphics, CROWN_ICON, crownX, detailY, 9, 12);
+            int crownX = textLeft;
+            renderTexture(graphics, CROWN_ICON, crownX, rowTop + 12, 9, 12);
             String price = String.valueOf(item.sellPrice().getAsLong());
             price = font.plainSubstrByWidth(price, Math.max(8, right - crownX - 14));
             graphics.text(font, price, crownX + 11, rowTop + 13, GOLD_LIGHT, false);
@@ -221,12 +213,13 @@ public final class InventoryLedgerPanel {
                 totalValue += item.sellPrice().getAsLong() * item.stack().getCount();
             }
         }
-        String label = "TOTAL";
-        int labelX = bounds.left() + 11;
+        String label = "Total:";
+        String total = String.valueOf(totalValue);
+        int groupWidth = font.width(label) + 4 + 9 + 3 + font.width(total);
+        int labelX = (bounds.left() + bounds.right() - groupWidth) / 2;
         graphics.text(font, label, labelX, footerTop + 7, PARCHMENT_MUTED, false);
         int crownX = labelX + font.width(label) + 4;
         renderTexture(graphics, CROWN_ICON, crownX, footerTop + 5, 9, 12);
-        String total = font.plainSubstrByWidth(String.valueOf(totalValue), Math.max(8, bounds.right() - crownX - 18));
         graphics.text(font, total, crownX + 11, footerTop + 7, GOLD_LIGHT, false);
     }
 
@@ -247,14 +240,6 @@ public final class InventoryLedgerPanel {
         int thumbTop = contentTop + travel * scrollOffset / maximumScroll;
         graphics.fill(bounds.right() - 8, contentTop, bounds.right() - 6, contentBottom, IRON_BLACK);
         graphics.fill(bounds.right() - 8, thumbTop, bounds.right() - 6, thumbTop + thumbHeight, GOLD_LIGHT);
-    }
-
-    private static Identifier rarityIcon(ItemRarity rarity) {
-        return switch (rarity) {
-            case COMMON -> COMMON_ICON;
-            case UNCOMMON -> UNCOMMON_ICON;
-            case RARE -> RARE_ICON;
-        };
     }
 
     private static void renderTexture(

@@ -43,13 +43,13 @@ public final class RavengardMainScreen extends Screen {
     protected void init() {
         int left = (width - PANEL_WIDTH) / 2;
         int top = (height - PANEL_HEIGHT) / 2;
-        int tabLeft = left + 2;
+        int tabLeft = left;
 
         addRenderableWidget(
             new RavengardSectionButton(
                 tabLeft,
                 top + 50,
-                129,
+                132,
                 24,
                 Component.literal("Visual"),
                 selectedCategory == Category.VISUAL,
@@ -60,7 +60,7 @@ public final class RavengardMainScreen extends Screen {
             new RavengardSectionButton(
                 tabLeft,
                 top + 74,
-                129,
+                132,
                 24,
                 Component.literal("General"),
                 selectedCategory == Category.GENERAL,
@@ -69,11 +69,11 @@ public final class RavengardMainScreen extends Screen {
         );
 
         if (selectedCategory == Category.VISUAL) {
-            int cardRight = left + PANEL_WIDTH - 19;
+            int cardRight = left + PANEL_WIDTH - 9;
             addRenderableWidget(
                 new RavengardToggleSwitch(
                     cardRight - 61,
-                    top + 108,
+                    top + 93,
                     Component.literal("Rarity overlays"),
                     RaritySlotHighlighter::isEnabled,
                     RaritySlotHighlighter::toggleEnabled
@@ -82,7 +82,7 @@ public final class RavengardMainScreen extends Screen {
             addRenderableWidget(
                 new RavengardToggleSwitch(
                     cardRight - 61,
-                    top + 156,
+                    top + 141,
                     Component.literal("Loot Value"),
                     InventoryLedgerPanel::isEnabled,
                     InventoryLedgerPanel::toggleEnabled
@@ -105,7 +105,6 @@ public final class RavengardMainScreen extends Screen {
         graphics.fill(left + 9, top + 9, left + PANEL_WIDTH - 9, top + PANEL_HEIGHT - 9, SURFACE);
 
         renderHeader(graphics, left, top);
-        renderCategoryDivider(graphics, left, top);
         renderSettingsSection(graphics, left, top);
         renderRivets(graphics, left, top);
 
@@ -133,17 +132,11 @@ public final class RavengardMainScreen extends Screen {
         graphics.text(font, title, left + 25, top + 22, TEXT, false);
     }
 
-    private void renderCategoryDivider(GuiGraphicsExtractor graphics, int left, int top) {
-        int dividerX = left + SIDEBAR_WIDTH + 9;
-        graphics.fill(dividerX, top + 48, dividerX + 1, top + PANEL_HEIGHT - 18, FRAME_BLACK);
-        graphics.fill(dividerX + 1, top + 48, dividerX + 2, top + PANEL_HEIGHT - 18, FRAME_LIGHT);
-    }
-
     private void renderSettingsSection(GuiGraphicsExtractor graphics, int left, int top) {
-        int cardLeft = left + SIDEBAR_WIDTH + 20;
-        int cardTop = top + 58;
-        int cardRight = left + PANEL_WIDTH - 19;
-        int cardBottom = top + PANEL_HEIGHT - 20;
+        int cardLeft = left + SIDEBAR_WIDTH + 9;
+        int cardTop = top + 43;
+        int cardRight = left + PANEL_WIDTH - 9;
+        int cardBottom = top + PANEL_HEIGHT - 9;
 
         graphics.fill(cardLeft, cardTop, cardRight, cardBottom, FRAME_BLACK);
         graphics.fill(cardLeft + 2, cardTop + 2, cardRight - 2, cardBottom - 2, FRAME_LIGHT);

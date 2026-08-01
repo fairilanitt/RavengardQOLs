@@ -67,8 +67,8 @@ final class RavengardSectionButton extends AbstractButton {
         int right = x + getWidth();
         int bottom = y + getHeight();
 
-        fillLeftRounded(graphics, x, y, right, bottom, FRAME);
-        fillLeftRounded(
+        fillRightRounded(graphics, x, y, right, bottom, FRAME);
+        fillRightRounded(
             graphics,
             x + 1,
             y + 1,
@@ -76,7 +76,7 @@ final class RavengardSectionButton extends AbstractButton {
             bottom - 1,
             isHoveredOrFocused() ? EDGE_HOVERED : EDGE
         );
-        fillLeftRounded(
+        fillRightRounded(
             graphics,
             x + 2,
             y + 2 + faceOffset,
@@ -95,7 +95,7 @@ final class RavengardSectionButton extends AbstractButton {
         graphics.text(font, getMessage(), textX, textY, selected ? TEXT_SELECTED : TEXT, false);
     }
 
-    private static void fillLeftRounded(
+    private static void fillRightRounded(
         GuiGraphicsExtractor graphics,
         int left,
         int top,
@@ -103,10 +103,9 @@ final class RavengardSectionButton extends AbstractButton {
         int bottom,
         int color
     ) {
-        graphics.fill(left + 5, top, right, bottom, color);
-        graphics.fill(left + 3, top + 1, right, bottom - 1, color);
-        graphics.fill(left + 1, top + 3, right, bottom - 3, color);
-        graphics.fill(left, top + 5, right, bottom - 5, color);
+        graphics.fill(left, top, right - 3, bottom, color);
+        graphics.fill(left, top + 1, right - 1, bottom - 1, color);
+        graphics.fill(left, top + 3, right, bottom - 3, color);
     }
 
     @Override

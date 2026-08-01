@@ -67,7 +67,7 @@ public final class NearbyPlayerList {
         int top = Math.max(SCREEN_MARGIN, (graphics.guiHeight() - panelHeight) / 2);
         int bottom = top + panelHeight;
 
-        renderFrame(graphics, font, left, top, right, bottom, players.size());
+        renderFrame(graphics, font, left, top, right, bottom);
         for (int index = 0; index < visibleRows; index++) {
             renderPlayerRow(graphics, font, left, right, top + HEADER_HEIGHT + index * ROW_HEIGHT, players.get(index), index);
         }
@@ -110,8 +110,7 @@ public final class NearbyPlayerList {
         int left,
         int top,
         int right,
-        int bottom,
-        int playerCount
+        int bottom
     ) {
         graphics.fill(left + 4, top + 5, right + 4, bottom + 5, SHADOW);
         graphics.fill(left, top, right, bottom, FRAME_BLACK);
@@ -123,9 +122,8 @@ public final class NearbyPlayerList {
         graphics.fill(left + 5, top + 5, right - 5, top + 7, GREEN);
         graphics.fill(left + 4, top + HEADER_HEIGHT - 3, right - 4, top + HEADER_HEIGHT - 2, BRASS);
 
-        graphics.text(font, "NEARBY", left + 11, top + 10, PARCHMENT, false);
-        String count = String.valueOf(playerCount);
-        graphics.text(font, count, right - 10 - font.width(count), top + 10, GREEN_LIGHT, false);
+        String title = "Nearby Players";
+        graphics.text(font, title, (left + right - font.width(title)) / 2, top + 10, PARCHMENT, false);
 
         rivet(graphics, left + 4, top + 4);
         rivet(graphics, right - 5, top + 4);
