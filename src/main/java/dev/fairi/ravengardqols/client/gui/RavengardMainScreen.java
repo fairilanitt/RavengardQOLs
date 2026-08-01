@@ -91,10 +91,10 @@ public final class RavengardMainScreen extends Screen {
             addRenderableWidget(
                 new RavengardToggleSwitch(
                     cardRight - 61,
-                    top + 177,
-                    Component.literal("All inventories"),
-                    InventoryLedgerPanel::isAllInventoriesEnabled,
-                    InventoryLedgerPanel::toggleAllInventories
+                    top + 174,
+                    Component.literal("Dead bodies only"),
+                    InventoryLedgerPanel::isDeadBodiesOnlyEnabled,
+                    InventoryLedgerPanel::toggleDeadBodiesOnly
                 )
             );
         }
@@ -156,8 +156,7 @@ public final class RavengardMainScreen extends Screen {
 
         if (selectedCategory == Category.VISUAL) {
             renderOptionRow(graphics, cardLeft + 12, cardTop + 40, cardRight - 12, "Rarity overlays");
-            renderOptionRow(graphics, cardLeft + 12, cardTop + 88, cardRight - 12, "Loot Value");
-            renderSubOptionRow(graphics, cardLeft + 24, cardTop + 128, cardRight - 12, "All inventories");
+            renderGroupedLootOption(graphics, cardLeft + 12, cardTop + 88, cardRight - 12);
         }
     }
 
@@ -171,12 +170,19 @@ public final class RavengardMainScreen extends Screen {
         graphics.text(font, Component.literal(label), left + 13, top + 14, TEXT_MUTED, false);
     }
 
-    private void renderSubOptionRow(GuiGraphicsExtractor graphics, int left, int top, int right, String label) {
-        int bottom = top + 28;
+    private void renderGroupedLootOption(GuiGraphicsExtractor graphics, int left, int top, int right) {
+        int bottom = top + 68;
         graphics.fill(left, top, right, bottom, FRAME_BLACK);
-        graphics.fill(left + 1, top + 1, right - 1, bottom - 1, SURFACE_DARK);
-        graphics.fill(left + 2, top + 2, left + 4, bottom - 2, ACCENT_DARK);
-        graphics.text(font, Component.literal(label), left + 11, top + 10, TEXT_MUTED, false);
+        graphics.fill(left + 1, top + 1, right - 1, bottom - 1, SURFACE_LIGHT);
+        graphics.fill(left + 2, top + 2, right - 2, bottom - 2, SURFACE_DARK);
+        graphics.fill(left + 3, top + 3, right - 3, top + 4, 0x3FFFFFFF);
+        graphics.fill(left + 3, top + 4, left + 5, bottom - 3, ACCENT_DARK);
+        graphics.text(font, Component.literal("Loot Value"), left + 13, top + 14, TEXT_MUTED, false);
+
+        int dividerY = top + 36;
+        graphics.fill(left + 5, dividerY, right - 3, dividerY + 1, FRAME_BLACK);
+        graphics.fill(left + 5, dividerY + 1, right - 3, dividerY + 2, FRAME_MID);
+        graphics.text(font, Component.literal("Dead bodies only"), left + 21, top + 49, TEXT_MUTED, false);
     }
 
     private void renderRivets(GuiGraphicsExtractor graphics, int left, int top) {

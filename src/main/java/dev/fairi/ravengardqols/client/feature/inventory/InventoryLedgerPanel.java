@@ -45,7 +45,7 @@ public final class InventoryLedgerPanel {
     private static int scrollOffset;
     private static int maximumScroll;
     private static boolean enabled;
-    private static boolean allInventoriesEnabled;
+    private static boolean deadBodiesOnly = true;
 
     private InventoryLedgerPanel() {
     }
@@ -64,19 +64,19 @@ public final class InventoryLedgerPanel {
         }
     }
 
-    public static boolean isAllInventoriesEnabled() {
-        return allInventoriesEnabled;
+    public static boolean isDeadBodiesOnlyEnabled() {
+        return deadBodiesOnly;
     }
 
-    public static void toggleAllInventories() {
-        allInventoriesEnabled = !allInventoriesEnabled;
+    public static void toggleDeadBodiesOnly() {
+        deadBodiesOnly = !deadBodiesOnly;
     }
 
     public static void render(ScreenEvent.Render.Foreground event) {
         if (!(event.getScreen() instanceof AbstractContainerScreen<?> screen)) {
             return;
         }
-        if (!enabled || (!allInventoriesEnabled && !isLootBag(screen))) {
+        if (!enabled || (deadBodiesOnly && !isLootBag(screen))) {
             panelBounds = null;
             maximumScroll = 0;
             return;
