@@ -216,7 +216,6 @@ public final class PartyFinderScreen extends Screen {
         EditBox box = new EditBox(font, x, y, width, 18, Component.literal(narration));
         box.setMaxLength(4);
         box.setValue(initial);
-        box.setFilter(value -> value.isEmpty() || value.matches("[0-9]{1,4}"));
         box.setResponder(responder);
         box.setTextColor(PARCHMENT);
         return box;

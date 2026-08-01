@@ -7,8 +7,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
-import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
 public final class NearbyPlayerList {
     private static final int PANEL_WIDTH = 136;
@@ -32,11 +30,7 @@ public final class NearbyPlayerList {
     private NearbyPlayerList() {
     }
 
-    public static void render(RenderGuiLayerEvent.Post event) {
-        if (!VanillaGuiLayers.HOTBAR.equals(event.getName())) {
-            return;
-        }
-
+    public static void render(GuiGraphicsExtractor graphics) {
         Minecraft minecraft = Minecraft.getInstance();
         if (
             minecraft.level == null
@@ -52,7 +46,6 @@ public final class NearbyPlayerList {
             return;
         }
 
-        GuiGraphicsExtractor graphics = event.getGuiGraphics();
         Font font = minecraft.font;
         int availableRows = Math.max(1, (graphics.guiHeight() - 48 - HEADER_HEIGHT) / ROW_HEIGHT);
         int visibleRows = Math.min(players.size(), availableRows);

@@ -21,6 +21,7 @@ public final class ItemInspectorScreen extends Screen {
     private static final int TEXT_MUTED = 0xFF91A4B8;
 
     private final ItemStack stack;
+    private final Screen parent;
     private ItemInspection inspection;
     private List<FormattedCharSequence> wrappedLines = List.of();
     private int panelLeft;
@@ -34,8 +35,22 @@ public final class ItemInspectorScreen extends Screen {
     private RavengardButton copyButton;
 
     public ItemInspectorScreen(ItemStack stack) {
+        this(null, stack);
+    }
+
+    public ItemInspectorScreen(Screen parent, ItemStack stack) {
         super(Component.literal("Item Component Inspector"));
+        this.parent = parent;
         this.stack = stack.copy();
+    }
+
+    @Override
+    public void onClose() {
+        if (parent != null) {
+            minecraft.gui.setScreen(parent);
+        } else {
+            super.onClose();
+        }
     }
 
     @Override

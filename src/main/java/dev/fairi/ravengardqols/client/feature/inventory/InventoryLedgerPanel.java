@@ -9,6 +9,7 @@ import java.util.OptionalLong;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
@@ -16,7 +17,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.neoforged.neoforge.client.event.ScreenEvent;
 
 public final class InventoryLedgerPanel {
     private static final int IDEAL_WIDTH = 146;
@@ -72,10 +72,14 @@ public final class InventoryLedgerPanel {
         deadBodiesOnly = !deadBodiesOnly;
     }
 
-    public static void render(ScreenEvent.Render.Foreground event) {
-        if (!(event.getScreen() instanceof AbstractContainerScreen<?> screen)) {
-            return;
-        }
+    public static void render(
+        AbstractContainerScreen<?> screen,
+        GuiGraphicsExtractor graphics,
+        int screenLeft,
+        int screenTop,
+        int imageWidth,
+        int imageHeight
+    ) {
         if (!enabled || (deadBodiesOnly && !isLootBag(screen))) {
             panelBounds = null;
             maximumScroll = 0;
@@ -87,10 +91,9 @@ public final class InventoryLedgerPanel {
             scrollOffset = 0;
         }
 
-        GuiGraphicsExtractor graphics = event.getGuiGraphics();
         Font font = Minecraft.getInstance().font;
         List<ListedItem> items = collectItems(screen);
-        PanelBounds bounds = calculateBounds(graphics, screen);
+        PanelBounds bounds = calculateBounds(graphics, screenLeft, screenTop, imageWidth, imageHeight);
         panelBounds = bounds;
 
         int contentTop = bounds.top() + HEADER_HEIGHT;
@@ -112,17 +115,17 @@ public final class InventoryLedgerPanel {
         renderScrollbar(graphics, bounds, contentTop, contentBottom, visibleRows, items.size());
     }
 
-    public static void onMouseScrolled(ScreenEvent.MouseScrolled.Pre event) {
-        if (!enabled || event.getScreen() != activeScreen || panelBounds == null || maximumScroll == 0) {
-            return;
+    public static boolean onMouseScrolled(Screen screen, double mouseX, double mouseY, double scrollDeltaY) {
+        if (!enabled || screen != activeScreen || panelBounds == null || maximumScroll == 0) {
+            return false;
         }
-        if (!panelBounds.contains(event.getMouseX(), event.getMouseY())) {
-            return;
+        if (!panelBounds.contains(mouseX, mouseY)) {
+            return false;
         }
 
-        int direction = (int) Math.signum(event.getScrollDeltaY());
+        int direction = (int) Math.signum(scrollDeltaY);
         scrollOffset = Mth.clamp(scrollOffset - direction * 2, 0, maximumScroll);
-        event.setCanceled(true);
+        return true;
     }
 
     private static List<ListedItem> collectItems(AbstractContainerScreen<?> screen) {
@@ -154,16 +157,22 @@ public final class InventoryLedgerPanel {
         return "Dead Body".equalsIgnoreCase(screen.getTitle().getString().trim());
     }
 
-    private static PanelBounds calculateBounds(GuiGraphicsExtractor graphics, AbstractContainerScreen<?> screen) {
-        int screenRight = screen.getLeftPos() + screen.getImageWidth();
+    private static PanelBounds calculateBounds(
+        GuiGraphicsExtractor graphics,
+        int screenLeft,
+        int screenTop,
+        int imageWidth,
+        int imageHeight
+    ) {
+        int screenRight = screenLeft + imageWidth;
         int availableRight = graphics.guiWidth() - screenRight - 6;
         int panelWidth = availableRight >= MINIMUM_WIDTH
             ? Math.min(IDEAL_WIDTH, availableRight)
             : Math.min(132, graphics.guiWidth() - 12);
         int right = availableRight >= MINIMUM_WIDTH ? screenRight + 5 + panelWidth : graphics.guiWidth() - 6;
         int left = right - panelWidth;
-        int top = Math.max(5, screen.getTopPos());
-        int bottom = Math.min(graphics.guiHeight() - 5, screen.getTopPos() + screen.getImageHeight());
+        int top = Math.max(5, screenTop);
+        int bottom = Math.min(graphics.guiHeight() - 5, screenTop + imageHeight);
         if (bottom - top < 92) {
             top = 5;
             bottom = graphics.guiHeight() - 5;

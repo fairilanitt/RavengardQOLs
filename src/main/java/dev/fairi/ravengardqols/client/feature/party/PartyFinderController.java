@@ -1,7 +1,6 @@
 package dev.fairi.ravengardqols.client.feature.party;
 
-import com.mojang.brigadier.arguments.StringArgumentType;
-import dev.fairi.ravengardqols.RavengardQols;
+import dev.fairi.ravengardqols.RavengardQolsCommon;
 import dev.fairi.ravengardqols.client.feature.playerlist.PlayerLevelParser;
 import dev.fairi.ravengardqols.client.gui.PartyFinderScreen;
 import java.util.ArrayList;
@@ -13,11 +12,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.client.event.ClientChatReceivedEvent;
-import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 
 public final class PartyFinderController {
     private static final Pattern USERNAME = Pattern.compile("[A-Za-z0-9_]{1,16}");
@@ -46,25 +42,6 @@ public final class PartyFinderController {
         return INSTANCE;
     }
 
-    public void registerCommands(RegisterClientCommandsEvent event) {
-        event.getDispatcher().register(
-            Commands.literal("pf")
-                .executes(context -> {
-                    Minecraft minecraft = Minecraft.getInstance();
-                    minecraft.execute(() -> openScreen(minecraft));
-                    return 1;
-                })
-                .then(Commands.literal("accept").then(Commands.argument("request", StringArgumentType.word()).executes(context -> {
-                    acceptRequest(StringArgumentType.getString(context, "request"));
-                    return 1;
-                })))
-                .then(Commands.literal("decline").then(Commands.argument("request", StringArgumentType.word()).executes(context -> {
-                    declineRequest(StringArgumentType.getString(context, "request"));
-                    return 1;
-                })))
-        );
-    }
-
     public void tick() {
         PartyRoster expired = chatParser.finishIfExpired();
         if (expired != null) {
@@ -86,11 +63,8 @@ public final class PartyFinderController {
         }
     }
 
-    public void onChat(ClientChatReceivedEvent event) {
-        if (!event.isSystem()) {
-            return;
-        }
-        PartyRoster parsed = chatParser.accept(event.getMessage().getString());
+    public void onSystemChat(Component message) {
+        PartyRoster parsed = chatParser.accept(message.getString());
         if (parsed != null) {
             setRoster(parsed);
         }
@@ -301,7 +275,8 @@ public final class PartyFinderController {
         Minecraft.getInstance().gui.hud.getChat().addClientSystemMessage(message);
     }
 
-    private void openScreen(Minecraft minecraft) {
+    public void openScreen() {
+        Minecraft minecraft = Minecraft.getInstance();
         startRelay();
         minecraft.gui.setScreen(new PartyFinderScreen(minecraft.gui.screen(), this));
         refreshParties();
@@ -367,7 +342,7 @@ public final class PartyFinderController {
 
     private void setFailure(String operation, Throwable failure) {
         Throwable cause = unwrap(failure);
-        RavengardQols.LOGGER.warn("Party Finder {} failed: {}", operation, cause.toString());
+        RavengardQolsCommon.LOGGER.warn("Party Finder {} failed: {}", operation, cause.toString());
         setStatus(operation + " failed: " + safeMessage(cause));
     }
 

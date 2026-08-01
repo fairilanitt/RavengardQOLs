@@ -1,6 +1,7 @@
 package dev.fairi.ravengardqols;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import dev.fairi.ravengardqols.client.feature.rarity.RaritySlotHighlighter;
 import dev.fairi.ravengardqols.client.feature.inventory.InventoryLedgerPanel;
 import dev.fairi.ravengardqols.client.feature.playerlist.NearbyPlayerList;
@@ -13,12 +14,14 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.commands.Commands;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.ClientChatReceivedEvent;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import org.lwjgl.glfw.GLFW;
 
 final class RavengardQolsClient {
@@ -63,12 +66,28 @@ final class RavengardQolsClient {
     }
 
     static void onScreenRender(ScreenEvent.Render.Foreground event) {
-        RaritySlotHighlighter.highlightContainerSlots(event);
-        InventoryLedgerPanel.render(event);
+        if (event.getScreen() instanceof AbstractContainerScreen<?> containerScreen) {
+            RaritySlotHighlighter.highlightContainerSlots(
+                containerScreen,
+                event.getGuiGraphics(),
+                containerScreen.getLeftPos(),
+                containerScreen.getTopPos()
+            );
+            InventoryLedgerPanel.render(
+                containerScreen,
+                event.getGuiGraphics(),
+                containerScreen.getLeftPos(),
+                containerScreen.getTopPos(),
+                containerScreen.getImageWidth(),
+                containerScreen.getImageHeight()
+            );
+        }
     }
 
     static void onRenderGuiLayer(RenderGuiLayerEvent.Post event) {
-        NearbyPlayerList.render(event);
+        if (VanillaGuiLayers.HOTBAR.equals(event.getName())) {
+            NearbyPlayerList.render(event.getGuiGraphics());
+        }
     }
 
     static void onScreenKeyPressed(ScreenEvent.KeyPressed.Pre event) {
@@ -85,15 +104,39 @@ final class RavengardQolsClient {
     }
 
     static void onScreenMouseScrolled(ScreenEvent.MouseScrolled.Pre event) {
-        InventoryLedgerPanel.onMouseScrolled(event);
+        if (InventoryLedgerPanel.onMouseScrolled(
+            event.getScreen(),
+            event.getMouseX(),
+            event.getMouseY(),
+            event.getScrollDeltaY()
+        )) {
+            event.setCanceled(true);
+        }
     }
 
     static void registerClientCommands(RegisterClientCommandsEvent event) {
-        PartyFinderController.get().registerCommands(event);
+        PartyFinderController controller = PartyFinderController.get();
+        event.getDispatcher().register(
+            Commands.literal("pf")
+                .executes(context -> {
+                    Minecraft.getInstance().execute(controller::openScreen);
+                    return 1;
+                })
+                .then(Commands.literal("accept").then(Commands.argument("request", StringArgumentType.word()).executes(context -> {
+                    controller.acceptRequest(StringArgumentType.getString(context, "request"));
+                    return 1;
+                })))
+                .then(Commands.literal("decline").then(Commands.argument("request", StringArgumentType.word()).executes(context -> {
+                    controller.declineRequest(StringArgumentType.getString(context, "request"));
+                    return 1;
+                })))
+        );
     }
 
     static void onClientChatReceived(ClientChatReceivedEvent event) {
-        PartyFinderController.get().onChat(event);
+        if (event.isSystem()) {
+            PartyFinderController.get().onSystemChat(event.getMessage());
+        }
     }
 
     private static void openInspector(ItemStack stack) {

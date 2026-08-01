@@ -1,6 +1,6 @@
 package dev.fairi.ravengardqols.client.feature.party;
 
-import dev.fairi.ravengardqols.RavengardQols;
+import dev.fairi.ravengardqols.RavengardQolsCommon;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -23,7 +23,7 @@ public final class PartyFinderConfig {
             try (var input = Files.newInputStream(path)) {
                 properties.load(input);
             } catch (IOException exception) {
-                RavengardQols.LOGGER.warn("Unable to read Party Finder config", exception);
+                RavengardQolsCommon.LOGGER.warn("Unable to read Party Finder config", exception);
             }
         } else {
             createDefault(path);
@@ -43,7 +43,7 @@ public final class PartyFinderConfig {
                 StandardCharsets.UTF_8
             );
         } catch (IOException exception) {
-            RavengardQols.LOGGER.warn("Unable to create Party Finder config", exception);
+            RavengardQolsCommon.LOGGER.warn("Unable to create Party Finder config", exception);
         }
     }
 

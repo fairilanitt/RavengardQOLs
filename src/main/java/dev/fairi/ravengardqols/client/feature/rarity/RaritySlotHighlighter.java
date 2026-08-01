@@ -5,7 +5,6 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.client.event.ScreenEvent;
 
 public final class RaritySlotHighlighter {
     private static final int SLOT_SIZE = 16;
@@ -22,14 +21,15 @@ public final class RaritySlotHighlighter {
         enabled = !enabled;
     }
 
-    public static void highlightContainerSlots(ScreenEvent.Render.Foreground event) {
-        if (!enabled || !(event.getScreen() instanceof AbstractContainerScreen<?> screen)) {
+    public static void highlightContainerSlots(
+        AbstractContainerScreen<?> screen,
+        GuiGraphicsExtractor graphics,
+        int left,
+        int top
+    ) {
+        if (!enabled) {
             return;
         }
-
-        GuiGraphicsExtractor graphics = event.getGuiGraphics();
-        int left = screen.getLeftPos();
-        int top = screen.getTopPos();
 
         for (Slot slot : screen.getMenu().slots) {
             if (!slot.isActive() || !slot.hasItem()) {
