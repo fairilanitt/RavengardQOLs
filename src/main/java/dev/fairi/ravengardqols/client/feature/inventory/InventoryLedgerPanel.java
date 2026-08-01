@@ -45,6 +45,7 @@ public final class InventoryLedgerPanel {
     private static int scrollOffset;
     private static int maximumScroll;
     private static boolean enabled;
+    private static boolean allInventoriesEnabled;
 
     private InventoryLedgerPanel() {
     }
@@ -63,8 +64,21 @@ public final class InventoryLedgerPanel {
         }
     }
 
+    public static boolean isAllInventoriesEnabled() {
+        return allInventoriesEnabled;
+    }
+
+    public static void toggleAllInventories() {
+        allInventoriesEnabled = !allInventoriesEnabled;
+    }
+
     public static void render(ScreenEvent.Render.Foreground event) {
-        if (!enabled || !(event.getScreen() instanceof AbstractContainerScreen<?> screen)) {
+        if (!(event.getScreen() instanceof AbstractContainerScreen<?> screen)) {
+            return;
+        }
+        if (!enabled || (!allInventoriesEnabled && !isLootBag(screen))) {
+            panelBounds = null;
+            maximumScroll = 0;
             return;
         }
 
@@ -134,6 +148,10 @@ public final class InventoryLedgerPanel {
                 .thenComparingInt(ListedItem::slotIndex)
         );
         return List.copyOf(items);
+    }
+
+    private static boolean isLootBag(AbstractContainerScreen<?> screen) {
+        return "Dead Body".equalsIgnoreCase(screen.getTitle().getString().trim());
     }
 
     private static PanelBounds calculateBounds(GuiGraphicsExtractor graphics, AbstractContainerScreen<?> screen) {

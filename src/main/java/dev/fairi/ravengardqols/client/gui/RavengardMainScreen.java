@@ -88,6 +88,15 @@ public final class RavengardMainScreen extends Screen {
                     InventoryLedgerPanel::toggleEnabled
                 )
             );
+            addRenderableWidget(
+                new RavengardToggleSwitch(
+                    cardRight - 61,
+                    top + 177,
+                    Component.literal("All inventories"),
+                    InventoryLedgerPanel::isAllInventoriesEnabled,
+                    InventoryLedgerPanel::toggleAllInventories
+                )
+            );
         }
     }
 
@@ -139,11 +148,8 @@ public final class RavengardMainScreen extends Screen {
         int cardBottom = top + PANEL_HEIGHT - 9;
 
         graphics.fill(cardLeft, cardTop, cardRight, cardBottom, FRAME_BLACK);
-        graphics.fill(cardLeft + 2, cardTop + 2, cardRight - 2, cardBottom - 2, FRAME_LIGHT);
-        graphics.fill(cardLeft + 3, cardTop + 3, cardRight - 3, cardBottom - 3, SURFACE_DARK);
-        graphics.fill(cardLeft + 6, cardTop + 6, cardRight - 6, cardBottom - 6, SURFACE);
-        graphics.fill(cardLeft + 6, cardTop + 6, cardRight - 6, cardTop + 9, ACCENT);
-        graphics.fill(cardLeft + 7, cardTop + 9, cardRight - 7, cardTop + 10, ACCENT_DARK);
+        graphics.fill(cardLeft + 2, cardTop + 2, cardRight - 2, cardBottom - 2, SURFACE_DARK);
+        graphics.fill(cardLeft + 4, cardTop + 4, cardRight - 4, cardBottom - 4, SURFACE);
 
         graphics.text(font, Component.literal(selectedCategory.label), cardLeft + 14, cardTop + 20, TEXT, false);
         graphics.fill(cardLeft + 14, cardTop + 35, cardRight - 14, cardTop + 36, FRAME_LIGHT);
@@ -151,6 +157,7 @@ public final class RavengardMainScreen extends Screen {
         if (selectedCategory == Category.VISUAL) {
             renderOptionRow(graphics, cardLeft + 12, cardTop + 40, cardRight - 12, "Rarity overlays");
             renderOptionRow(graphics, cardLeft + 12, cardTop + 88, cardRight - 12, "Loot Value");
+            renderSubOptionRow(graphics, cardLeft + 24, cardTop + 128, cardRight - 12, "All inventories");
         }
     }
 
@@ -162,6 +169,14 @@ public final class RavengardMainScreen extends Screen {
         graphics.fill(left + 3, top + 3, right - 3, top + 4, 0x3FFFFFFF);
         graphics.fill(left + 3, top + 4, left + 5, bottom - 3, ACCENT_DARK);
         graphics.text(font, Component.literal(label), left + 13, top + 14, TEXT_MUTED, false);
+    }
+
+    private void renderSubOptionRow(GuiGraphicsExtractor graphics, int left, int top, int right, String label) {
+        int bottom = top + 28;
+        graphics.fill(left, top, right, bottom, FRAME_BLACK);
+        graphics.fill(left + 1, top + 1, right - 1, bottom - 1, SURFACE_DARK);
+        graphics.fill(left + 2, top + 2, left + 4, bottom - 2, ACCENT_DARK);
+        graphics.text(font, Component.literal(label), left + 11, top + 10, TEXT_MUTED, false);
     }
 
     private void renderRivets(GuiGraphicsExtractor graphics, int left, int top) {
