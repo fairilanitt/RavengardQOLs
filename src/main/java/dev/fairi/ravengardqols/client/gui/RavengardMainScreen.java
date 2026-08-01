@@ -1,13 +1,15 @@
 package dev.fairi.ravengardqols.client.gui;
 
+import dev.fairi.ravengardqols.client.feature.inventory.InventoryLedgerPanel;
 import dev.fairi.ravengardqols.client.feature.rarity.RaritySlotHighlighter;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 public final class RavengardMainScreen extends Screen {
-    private static final int PANEL_WIDTH = 332;
-    private static final int PANEL_HEIGHT = 204;
+    private static final int PANEL_WIDTH = 392;
+    private static final int PANEL_HEIGHT = 232;
+    private static final int SIDEBAR_WIDTH = 122;
 
     private static final int SHADOW_FAR = 0x34000000;
     private static final int SHADOW_NEAR = 0x86000000;
@@ -24,12 +26,10 @@ public final class RavengardMainScreen extends Screen {
     private static final int GOLD = 0xFFE6B84C;
     private static final int TEXT = 0xFFEAF2FA;
     private static final int TEXT_MUTED = 0xFF91A4B8;
-    private static final int COMMON = 0xFFD0D0D0;
-    private static final int UNCOMMON = 0xFF168A35;
-    private static final int RARE = 0xFF3B82F6;
 
     private final Screen parent;
     private RavengardButton rarityToggleButton;
+    private RavengardButton lootMenuToggleButton;
 
     public RavengardMainScreen(Screen parent) {
         super(Component.literal("Ravengard QOL's"));
@@ -45,19 +45,17 @@ public final class RavengardMainScreen extends Screen {
     protected void init() {
         int left = (width - PANEL_WIDTH) / 2;
         int top = (height - PANEL_HEIGHT) / 2;
-        int railLeft = left + 9;
-        int selectedTop = top + 56;
-        int cardRight = left + PANEL_WIDTH - 20;
-        int cardTop = top + 58;
+        int cardRight = left + PANEL_WIDTH - 19;
 
-        addRenderableWidget(new RavengardButton(railLeft + 6, selectedTop, 39, 39, Component.literal("QOL"), () -> { }));
-        RavengardButton inspectorButton = addRenderableWidget(
-            new RavengardButton(railLeft + 6, selectedTop + 47, 39, 39, Component.literal("INFO"), this::inspectHeldItem)
+        addRenderableWidget(
+            new RavengardSectionButton(left + 18, top + 64, 104, 24, Component.literal("Visual"), true, () -> { })
         );
-        inspectorButton.active = minecraft.player != null && !minecraft.player.getMainHandItem().isEmpty();
 
         rarityToggleButton = addRenderableWidget(
-            new RavengardButton(cardRight - 68, cardTop + 16, 56, 17, rarityToggleLabel(), this::toggleRarityHighlights)
+            new RavengardButton(cardRight - 72, top + 102, 54, 19, rarityToggleLabel(), this::toggleRarityHighlights)
+        );
+        lootMenuToggleButton = addRenderableWidget(
+            new RavengardButton(cardRight - 72, top + 150, 54, 19, lootMenuToggleLabel(), this::toggleLootMenu)
         );
     }
 
@@ -76,7 +74,7 @@ public final class RavengardMainScreen extends Screen {
 
         renderHeader(graphics, left, top);
         renderSidebar(graphics, left, top);
-        renderFeatureCard(graphics, left, top);
+        renderVisualSection(graphics, left, top);
         renderRivets(graphics, left, top);
 
         super.extractRenderState(graphics, mouseX, mouseY, partialTick);
@@ -92,7 +90,7 @@ public final class RavengardMainScreen extends Screen {
         graphics.fill(left + 11, top + 11, left + PANEL_WIDTH - 11, top + 40, FRAME_MID);
         graphics.fill(left + 11, top + 12, left + PANEL_WIDTH - 11, top + 14, FRAME_LIGHT);
         graphics.fill(left + 11, top + 40, left + PANEL_WIDTH - 11, top + 43, ACCENT);
-        graphics.fill(left + 11, top + 40, left + PANEL_WIDTH - 75, top + 41, ACCENT_LIGHT);
+        graphics.fill(left + 11, top + 40, left + PANEL_WIDTH - 88, top + 41, ACCENT_LIGHT);
 
         graphics.text(font, title, left + 25, top + 22, TEXT, false);
         graphics.fill(left + PANEL_WIDTH - 42, top + 20, left + PANEL_WIDTH - 24, top + 22, GOLD);
@@ -103,17 +101,20 @@ public final class RavengardMainScreen extends Screen {
     private void renderSidebar(GuiGraphicsExtractor graphics, int left, int top) {
         int railLeft = left + 9;
         int railTop = top + 43;
-        graphics.fill(railLeft, railTop, railLeft + 52, top + PANEL_HEIGHT - 9, FRAME_BLACK);
-        graphics.fill(railLeft + 3, railTop + 3, railLeft + 49, top + PANEL_HEIGHT - 12, FRAME_DARK);
-        graphics.fill(railLeft + 4, railTop + 4, railLeft + 48, top + PANEL_HEIGHT - 13, FRAME_MID);
+        int railRight = railLeft + SIDEBAR_WIDTH;
+        int railBottom = top + PANEL_HEIGHT - 9;
 
+        graphics.fill(railLeft, railTop, railRight, railBottom, FRAME_BLACK);
+        graphics.fill(railLeft + 3, railTop + 3, railRight - 3, railBottom - 3, FRAME_DARK);
+        graphics.fill(railLeft + 4, railTop + 4, railRight - 4, railBottom - 4, FRAME_MID);
+        graphics.fill(railRight - 3, railTop + 4, railRight - 2, railBottom - 4, SURFACE_LIGHT);
     }
 
-    private void renderFeatureCard(GuiGraphicsExtractor graphics, int left, int top) {
-        int cardLeft = left + 72;
+    private void renderVisualSection(GuiGraphicsExtractor graphics, int left, int top) {
+        int cardLeft = left + SIDEBAR_WIDTH + 20;
         int cardTop = top + 58;
-        int cardRight = left + PANEL_WIDTH - 20;
-        int cardBottom = top + PANEL_HEIGHT - 22;
+        int cardRight = left + PANEL_WIDTH - 19;
+        int cardBottom = top + PANEL_HEIGHT - 20;
 
         graphics.fill(cardLeft + 5, cardTop + 6, cardRight + 5, cardBottom + 6, SHADOW_NEAR);
         graphics.fill(cardLeft, cardTop, cardRight, cardBottom, FRAME_BLACK);
@@ -123,22 +124,22 @@ public final class RavengardMainScreen extends Screen {
         graphics.fill(cardLeft + 6, cardTop + 6, cardRight - 6, cardTop + 9, ACCENT);
         graphics.fill(cardLeft + 7, cardTop + 9, cardRight - 7, cardTop + 10, ACCENT_DARK);
 
-        graphics.text(font, Component.literal("Rarity Highlights"), cardLeft + 14, cardTop + 20, TEXT, false);
+        graphics.text(font, Component.literal("Visual"), cardLeft + 14, cardTop + 20, TEXT, false);
+        graphics.fill(cardLeft + 14, cardTop + 35, cardRight - 14, cardTop + 36, FRAME_LIGHT);
 
-        int ruleY = cardTop + 40;
-        graphics.fill(cardLeft + 14, ruleY, cardRight - 14, ruleY + 1, FRAME_LIGHT);
-        renderRarityKey(graphics, cardLeft + 14, cardTop + 52, COMMON, "COMMON");
-        renderRarityKey(graphics, cardLeft + 14, cardTop + 75, UNCOMMON, "UNCOMMON");
-        renderRarityKey(graphics, cardLeft + 14, cardTop + 98, RARE, "RARE");
+        renderOptionRow(graphics, cardLeft + 12, cardTop + 40, cardRight - 12, "Rarity overlays");
+        renderOptionRow(graphics, cardLeft + 12, cardTop + 88, cardRight - 12, "Loot menu");
     }
 
-    private void renderRarityKey(GuiGraphicsExtractor graphics, int x, int y, int color, String label) {
-        graphics.fill(x + 2, y + 3, x + 18, y + 19, SHADOW_NEAR);
-        graphics.fill(x, y, x + 18, y + 18, FRAME_BLACK);
-        graphics.fill(x + 2, y + 2, x + 16, y + 16, color);
-        graphics.fill(x + 4, y + 4, x + 14, y + 14, SURFACE_DARK);
-        graphics.fill(x + 5, y + 5, x + 13, y + 6, 0x70FFFFFF);
-        graphics.text(font, label, x + 27, y + 5, TEXT_MUTED, false);
+    private void renderOptionRow(GuiGraphicsExtractor graphics, int left, int top, int right, String label) {
+        int bottom = top + 36;
+        graphics.fill(left + 3, top + 4, right + 3, bottom + 4, SHADOW_NEAR);
+        graphics.fill(left, top, right, bottom, FRAME_BLACK);
+        graphics.fill(left + 1, top + 1, right - 1, bottom - 1, SURFACE_LIGHT);
+        graphics.fill(left + 2, top + 2, right - 2, bottom - 2, SURFACE_DARK);
+        graphics.fill(left + 3, top + 3, right - 3, top + 4, 0x3FFFFFFF);
+        graphics.fill(left + 3, top + 4, left + 5, bottom - 3, ACCENT_DARK);
+        graphics.text(font, Component.literal(label), left + 13, top + 14, TEXT_MUTED, false);
     }
 
     private void toggleRarityHighlights() {
@@ -146,14 +147,17 @@ public final class RavengardMainScreen extends Screen {
         rarityToggleButton.setMessage(rarityToggleLabel());
     }
 
-    private Component rarityToggleLabel() {
-        return Component.literal(RaritySlotHighlighter.isEnabled() ? "ACTIVE" : "OFF");
+    private void toggleLootMenu() {
+        InventoryLedgerPanel.toggleEnabled();
+        lootMenuToggleButton.setMessage(lootMenuToggleLabel());
     }
 
-    private void inspectHeldItem() {
-        if (minecraft.player != null && !minecraft.player.getMainHandItem().isEmpty()) {
-            minecraft.gui.pushScreenLayer(new ItemInspectorScreen(minecraft.player.getMainHandItem()));
-        }
+    private Component rarityToggleLabel() {
+        return Component.literal(RaritySlotHighlighter.isEnabled() ? "ON" : "OFF");
+    }
+
+    private Component lootMenuToggleLabel() {
+        return Component.literal(InventoryLedgerPanel.isEnabled() ? "ON" : "OFF");
     }
 
     private void renderRivets(GuiGraphicsExtractor graphics, int left, int top) {

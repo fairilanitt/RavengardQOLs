@@ -19,7 +19,6 @@ public final class RavengardQols {
             modEventBus.addListener(RavengardQolsClient::registerKeyMappings);
             NeoForge.EVENT_BUS.addListener(RavengardQolsClient::onClientTick);
             NeoForge.EVENT_BUS.addListener(RavengardQolsClient::onScreenRender);
-            NeoForge.EVENT_BUS.addListener(RavengardQolsClient::onRenderGuiLayer);
             NeoForge.EVENT_BUS.addListener(RavengardQolsClient::onScreenKeyPressed);
             NeoForge.EVENT_BUS.addListener(RavengardQolsClient::onScreenMouseScrolled);
         }

@@ -39,12 +39,27 @@ public final class InventoryLedgerPanel {
     private static PanelBounds panelBounds;
     private static int scrollOffset;
     private static int maximumScroll;
+    private static boolean enabled = true;
 
     private InventoryLedgerPanel() {
     }
 
+    public static boolean isEnabled() {
+        return enabled;
+    }
+
+    public static void toggleEnabled() {
+        enabled = !enabled;
+        if (!enabled) {
+            activeScreen = null;
+            panelBounds = null;
+            scrollOffset = 0;
+            maximumScroll = 0;
+        }
+    }
+
     public static void render(ScreenEvent.Render.Foreground event) {
-        if (!(event.getScreen() instanceof AbstractContainerScreen<?> screen)) {
+        if (!enabled || !(event.getScreen() instanceof AbstractContainerScreen<?> screen)) {
             return;
         }
 
@@ -79,7 +94,7 @@ public final class InventoryLedgerPanel {
     }
 
     public static void onMouseScrolled(ScreenEvent.MouseScrolled.Pre event) {
-        if (event.getScreen() != activeScreen || panelBounds == null || maximumScroll == 0) {
+        if (!enabled || event.getScreen() != activeScreen || panelBounds == null || maximumScroll == 0) {
             return;
         }
         if (!panelBounds.contains(event.getMouseX(), event.getMouseY())) {

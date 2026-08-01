@@ -13,7 +13,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
-import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import org.lwjgl.glfw.GLFW;
 
@@ -60,10 +59,6 @@ final class RavengardQolsClient {
     static void onScreenRender(ScreenEvent.Render.Foreground event) {
         RaritySlotHighlighter.highlightContainerSlots(event);
         InventoryLedgerPanel.render(event);
-    }
-
-    static void onRenderGuiLayer(RenderGuiLayerEvent.Post event) {
-        RaritySlotHighlighter.highlightHotbarSlots(event);
     }
 
     static void onScreenKeyPressed(ScreenEvent.KeyPressed.Pre event) {
