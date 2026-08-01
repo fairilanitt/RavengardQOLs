@@ -43,13 +43,13 @@ public final class RavengardMainScreen extends Screen {
     protected void init() {
         int left = (width - PANEL_WIDTH) / 2;
         int top = (height - PANEL_HEIGHT) / 2;
-        int tabLeft = left + 18;
+        int tabLeft = left + 2;
 
         addRenderableWidget(
             new RavengardSectionButton(
                 tabLeft,
-                top + 53,
-                104,
+                top + 50,
+                129,
                 24,
                 Component.literal("Visual"),
                 selectedCategory == Category.VISUAL,
@@ -59,8 +59,8 @@ public final class RavengardMainScreen extends Screen {
         addRenderableWidget(
             new RavengardSectionButton(
                 tabLeft,
-                top + 84,
-                104,
+                top + 74,
+                129,
                 24,
                 Component.literal("General"),
                 selectedCategory == Category.GENERAL,
@@ -72,8 +72,8 @@ public final class RavengardMainScreen extends Screen {
             int cardRight = left + PANEL_WIDTH - 19;
             addRenderableWidget(
                 new RavengardToggleSwitch(
-                    cardRight - 59,
-                    top + 106,
+                    cardRight - 61,
+                    top + 108,
                     Component.literal("Rarity overlays"),
                     RaritySlotHighlighter::isEnabled,
                     RaritySlotHighlighter::toggleEnabled
@@ -81,9 +81,9 @@ public final class RavengardMainScreen extends Screen {
             );
             addRenderableWidget(
                 new RavengardToggleSwitch(
-                    cardRight - 59,
-                    top + 154,
-                    Component.literal("Loot menu"),
+                    cardRight - 61,
+                    top + 156,
+                    Component.literal("Loot Value"),
                     InventoryLedgerPanel::isEnabled,
                     InventoryLedgerPanel::toggleEnabled
                 )
@@ -157,7 +157,7 @@ public final class RavengardMainScreen extends Screen {
 
         if (selectedCategory == Category.VISUAL) {
             renderOptionRow(graphics, cardLeft + 12, cardTop + 40, cardRight - 12, "Rarity overlays");
-            renderOptionRow(graphics, cardLeft + 12, cardTop + 88, cardRight - 12, "Loot menu");
+            renderOptionRow(graphics, cardLeft + 12, cardTop + 88, cardRight - 12, "Loot Value");
         }
     }
 

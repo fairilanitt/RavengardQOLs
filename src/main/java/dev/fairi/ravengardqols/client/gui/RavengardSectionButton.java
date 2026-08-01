@@ -11,7 +11,6 @@ import net.minecraft.network.chat.Component;
 
 final class RavengardSectionButton extends AbstractButton {
     private static final long MINIMUM_PRESS_NANOS = 110_000_000L;
-    private static final int SHADOW = 0xA0000000;
     private static final int FRAME = 0xFF080C12;
     private static final int EDGE = 0xFF15508A;
     private static final int EDGE_HOVERED = 0xFF66B7FF;
@@ -60,47 +59,43 @@ final class RavengardSectionButton extends AbstractButton {
 
     @Override
     protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        boolean pressed = selected || mouseHeld || System.nanoTime() < pressedUntil;
-        int offset = pressed ? 2 : 0;
+        boolean momentarilyPressed = mouseHeld || System.nanoTime() < pressedUntil;
+        boolean recessed = selected || momentarilyPressed;
+        int faceOffset = !selected && momentarilyPressed ? 1 : 0;
         int x = getX();
         int y = getY();
         int right = x + getWidth();
         int bottom = y + getHeight();
 
-        if (!selected) {
-            fillChamfered(graphics, x + 2, y + 4, right + 2, bottom + 4, SHADOW);
-        } else {
-            fillChamfered(graphics, x + 1, y + 3, right + 1, bottom + 3, SHADOW);
-        }
-        fillChamfered(graphics, x, y + offset, right, bottom + offset, FRAME);
-        fillChamfered(
+        fillLeftRounded(graphics, x, y, right, bottom, FRAME);
+        fillLeftRounded(
             graphics,
             x + 1,
-            y + 1 + offset,
+            y + 1,
             right - 1,
-            bottom - 1 + offset,
+            bottom - 1,
             isHoveredOrFocused() ? EDGE_HOVERED : EDGE
         );
-        fillChamfered(
+        fillLeftRounded(
             graphics,
             x + 2,
-            y + 2 + offset,
+            y + 2 + faceOffset,
             right - 2,
-            bottom - 2 + offset,
-            pressed ? FACE_SELECTED : isHoveredOrFocused() ? FACE_HOVERED : FACE
+            bottom - 2,
+            recessed ? FACE_SELECTED : isHoveredOrFocused() ? FACE_HOVERED : FACE
         );
 
-        if (!pressed) {
-            graphics.fill(x + 5, y + 3, right - 5, y + 4, 0x5CFFFFFF);
+        if (!recessed) {
+            graphics.fill(x + 7, y + 3, right - 3, y + 4, 0x5CFFFFFF);
         }
 
         Font font = Minecraft.getInstance().font;
         int textX = x + (getWidth() - font.width(getMessage())) / 2;
-        int textY = y + (getHeight() - font.lineHeight) / 2 + offset;
+        int textY = y + (getHeight() - font.lineHeight) / 2 + faceOffset;
         graphics.text(font, getMessage(), textX, textY, selected ? TEXT_SELECTED : TEXT, false);
     }
 
-    private static void fillChamfered(
+    private static void fillLeftRounded(
         GuiGraphicsExtractor graphics,
         int left,
         int top,
@@ -108,9 +103,10 @@ final class RavengardSectionButton extends AbstractButton {
         int bottom,
         int color
     ) {
-        graphics.fill(left + 2, top, right - 2, bottom, color);
-        graphics.fill(left, top + 2, right, bottom - 2, color);
-        graphics.fill(left + 1, top + 1, right - 1, bottom - 1, color);
+        graphics.fill(left + 5, top, right, bottom, color);
+        graphics.fill(left + 3, top + 1, right, bottom - 1, color);
+        graphics.fill(left + 1, top + 3, right, bottom - 3, color);
+        graphics.fill(left, top + 5, right, bottom - 5, color);
     }
 
     @Override

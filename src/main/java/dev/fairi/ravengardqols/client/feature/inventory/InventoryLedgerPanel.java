@@ -10,9 +10,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 
 public final class InventoryLedgerPanel {
@@ -35,11 +38,16 @@ public final class InventoryLedgerPanel {
     private static final int PARCHMENT = 0xFFE7D3A2;
     private static final int PARCHMENT_MUTED = 0xFFBFAE84;
 
+    private static final Identifier COMMON_ICON = texture("common.png");
+    private static final Identifier UNCOMMON_ICON = texture("uncommon.png");
+    private static final Identifier RARE_ICON = texture("rare.png");
+    private static final Identifier CROWN_ICON = texture("crown.png");
+
     private static AbstractContainerScreen<?> activeScreen;
     private static PanelBounds panelBounds;
     private static int scrollOffset;
     private static int maximumScroll;
-    private static boolean enabled = true;
+    private static boolean enabled;
 
     private InventoryLedgerPanel() {
     }
@@ -114,6 +122,9 @@ public final class InventoryLedgerPanel {
             }
 
             ItemStack stack = slot.getItem();
+            if (stack.is(Items.NETHER_STAR)) {
+                continue;
+            }
             RarityScanner.detect(stack).ifPresent(rarity ->
                 items.add(new ListedItem(stack, rarity, SellPriceScanner.detect(stack), slot.index))
             );
@@ -158,8 +169,8 @@ public final class InventoryLedgerPanel {
         graphics.fill(bounds.left() + 7, bounds.top() + HEADER_HEIGHT - 4, bounds.right() - 7, bounds.top() + HEADER_HEIGHT - 2, GOLD);
         graphics.fill(bounds.left() + 8, bounds.top() + HEADER_HEIGHT - 4, bounds.right() - 35, bounds.top() + HEADER_HEIGHT - 3, GOLD_LIGHT);
 
-        renderCrest(graphics, (bounds.left() + bounds.right()) / 2, bounds.top() + 8);
-        String title = "LOOT LEDGER";
+        renderTexture(graphics, CROWN_ICON, (bounds.left() + bounds.right()) / 2 - 5, bounds.top() + 7, 10, 12);
+        String title = "Loot Value";
         graphics.text(font, title, (bounds.left() + bounds.right() - font.width(title)) / 2, bounds.top() + 20, PARCHMENT, false);
         String count = String.valueOf(itemCount);
         graphics.text(font, count, bounds.right() - 11 - font.width(count), bounds.top() + 20, GOLD_LIGHT, false);
@@ -176,6 +187,7 @@ public final class InventoryLedgerPanel {
         graphics.fill(left + 2, rowTop + 3, right + 2, rowTop + ROW_HEIGHT + 1, 0x72000000);
         graphics.fill(left, rowTop + 1, right, rowTop + ROW_HEIGHT - 1, IRON_BLACK);
         graphics.fill(left + 1, rowTop + 2, right - 1, rowTop + ROW_HEIGHT - 2, WOOD);
+        graphics.fill(left + 1, rowTop + 2, right - 1, rowTop + ROW_HEIGHT - 2, item.rarity().fillColor());
         graphics.fill(left + 2, rowTop + 3, left + 4, rowTop + ROW_HEIGHT - 3, item.rarity().borderColor());
         graphics.fill(left + 4, rowTop + 3, right - 2, rowTop + 4, WOOD_LIGHT);
 
@@ -187,12 +199,15 @@ public final class InventoryLedgerPanel {
         String itemName = font.plainSubstrByWidth(item.stack().getHoverName().getString(), textWidth);
         graphics.text(font, itemName, textLeft, rowTop + 3, item.rarity().borderColor(), false);
 
-        String details = item.rarity().name();
+        int detailY = rowTop + 12;
+        renderTexture(graphics, rarityIcon(item.rarity()), textLeft, detailY, 9, 16);
         if (item.sellPrice().isPresent()) {
-            details += " | " + item.sellPrice().getAsLong() + " CROWNS";
+            int crownX = textLeft + 12;
+            renderTexture(graphics, CROWN_ICON, crownX, detailY, 9, 12);
+            String price = String.valueOf(item.sellPrice().getAsLong());
+            price = font.plainSubstrByWidth(price, Math.max(8, right - crownX - 14));
+            graphics.text(font, price, crownX + 11, rowTop + 13, GOLD_LIGHT, false);
         }
-        details = font.plainSubstrByWidth(details, textWidth);
-        graphics.text(font, details, textLeft, rowTop + 13, item.sellPrice().isPresent() ? GOLD_LIGHT : PARCHMENT_MUTED, false);
     }
 
     private static void renderFooter(GuiGraphicsExtractor graphics, Font font, PanelBounds bounds, List<ListedItem> items) {
@@ -206,9 +221,13 @@ public final class InventoryLedgerPanel {
                 totalValue += item.sellPrice().getAsLong() * item.stack().getCount();
             }
         }
-        String total = "TOTAL " + totalValue + " CROWNS";
-        total = font.plainSubstrByWidth(total, bounds.width() - 20);
-        graphics.text(font, total, bounds.left() + 11, footerTop + 7, GOLD_LIGHT, false);
+        String label = "TOTAL";
+        int labelX = bounds.left() + 11;
+        graphics.text(font, label, labelX, footerTop + 7, PARCHMENT_MUTED, false);
+        int crownX = labelX + font.width(label) + 4;
+        renderTexture(graphics, CROWN_ICON, crownX, footerTop + 5, 9, 12);
+        String total = font.plainSubstrByWidth(String.valueOf(totalValue), Math.max(8, bounds.right() - crownX - 18));
+        graphics.text(font, total, crownX + 11, footerTop + 7, GOLD_LIGHT, false);
     }
 
     private static void renderScrollbar(
@@ -230,12 +249,27 @@ public final class InventoryLedgerPanel {
         graphics.fill(bounds.right() - 8, thumbTop, bounds.right() - 6, thumbTop + thumbHeight, GOLD_LIGHT);
     }
 
-    private static void renderCrest(GuiGraphicsExtractor graphics, int centerX, int top) {
-        graphics.fill(centerX - 11, top + 2, centerX + 12, top + 4, GOLD_DARK);
-        graphics.fill(centerX - 7, top, centerX - 4, top + 5, GOLD);
-        graphics.fill(centerX - 1, top - 2, centerX + 2, top + 5, GOLD_LIGHT);
-        graphics.fill(centerX + 5, top, centerX + 8, top + 5, GOLD);
-        graphics.fill(centerX - 8, top + 4, centerX + 9, top + 6, GOLD);
+    private static Identifier rarityIcon(ItemRarity rarity) {
+        return switch (rarity) {
+            case COMMON -> COMMON_ICON;
+            case UNCOMMON -> UNCOMMON_ICON;
+            case RARE -> RARE_ICON;
+        };
+    }
+
+    private static void renderTexture(
+        GuiGraphicsExtractor graphics,
+        Identifier texture,
+        int x,
+        int y,
+        int size,
+        int sourceSize
+    ) {
+        graphics.blit(RenderPipelines.GUI_TEXTURED, texture, x, y, 0, 0, size, size, sourceSize, sourceSize, sourceSize, sourceSize);
+    }
+
+    private static Identifier texture(String fileName) {
+        return Identifier.fromNamespaceAndPath("ravengardqols", "textures/gui/loot/" + fileName);
     }
 
     private static void rivet(GuiGraphicsExtractor graphics, int x, int y) {

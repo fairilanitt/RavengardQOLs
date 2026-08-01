@@ -16,7 +16,7 @@ public final class NearbyPlayerList {
     private static final Pattern TRAILING_LEVEL = Pattern.compile("^(.*?)\\s+([0-9]+)\\s*\\D*$");
     private static final Pattern LEGACY_FORMATTING = Pattern.compile("§[0-9A-FK-ORa-fk-or]");
 
-    private static final int PANEL_WIDTH = 112;
+    private static final int PANEL_WIDTH = 136;
     private static final int HEADER_HEIGHT = 24;
     private static final int ROW_HEIGHT = 15;
     private static final int SCREEN_MARGIN = 8;
@@ -43,7 +43,12 @@ public final class NearbyPlayerList {
         }
 
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.level == null || minecraft.player == null || minecraft.gui.screen() != null) {
+        if (
+            minecraft.level == null
+                || minecraft.player == null
+                || minecraft.gui.screen() != null
+                || !minecraft.options.keyPlayerList.isDown()
+        ) {
             return;
         }
 
@@ -56,10 +61,11 @@ public final class NearbyPlayerList {
         Font font = minecraft.font;
         int availableRows = Math.max(1, (graphics.guiHeight() - 48 - HEADER_HEIGHT) / ROW_HEIGHT);
         int visibleRows = Math.min(players.size(), availableRows);
-        int right = graphics.guiWidth() - SCREEN_MARGIN;
-        int left = right - PANEL_WIDTH;
-        int top = 24;
-        int bottom = top + HEADER_HEIGHT + visibleRows * ROW_HEIGHT + 5;
+        int panelHeight = HEADER_HEIGHT + visibleRows * ROW_HEIGHT + 5;
+        int left = Math.max(SCREEN_MARGIN, graphics.guiWidth() / 16);
+        int right = left + PANEL_WIDTH;
+        int top = Math.max(SCREEN_MARGIN, (graphics.guiHeight() - panelHeight) / 2);
+        int bottom = top + panelHeight;
 
         renderFrame(graphics, font, left, top, right, bottom, players.size());
         for (int index = 0; index < visibleRows; index++) {
